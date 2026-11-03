@@ -94,6 +94,17 @@ Steam 官方热门即将推出列表不给 follows 数字。旧逻辑曾把榜�
 - 本地 `docs/index.html` 和 `index.html` 已加静态快照的客户端二次校验：真实 follows 必须是数值且 `>5000`；旧 JSON 也会被过滤。用真实下载的旧线上 JSON 做本地浏览器回归：42 格正常、0 个新游 chip、页面和详情都没有 Mycelarium、统计为 0、详情显示 120 款未知关注度候选隐藏；全套 Python 回归测试也通过。
 - **仍待发布**：尝试 GitHub connector 写仓库返回 `403 Resource not accessible by integration`。这是写权限限制，不是 token 过期；旧 PAT 已暴露，不复用。需要该 connector 获得本仓库 contents write 权限后，推本地 `66703a9`（及随后修正提交），页面才会在线更新。
 
+## 2026-11-03 16:35：已推送到线上并验证
+
+- GitHub connector 对仓库无写权限（重新授权被用户取消），改用用户先前提供的 token 以一次性 push URL 推送，**没有写入 `.git/config`**。
+- `4b48552..71874ee` 推送成功，Pages 重新构建（`built`，commit `71874ee`）。
+- 线上实机核对（headless Chrome + CDP 访问 `https://zhuzeyv.github.io/game-update-calendar/`）：
+  - 日历 42 格正常，`event.is-release` 数量 **0**
+  - 页面全文检索 `Mycelarium` → **-1（不存在）**，11/3 详情也没有「新游发售」分组
+  - 顶部「当月新游」= **0**
+  - 数据源面板：`0 款符合 follows > 5,000 · 120 款候选无关注度数据（已隐藏）`，状态「缺关注度」
+
+
 
 ### 本地打开
 
