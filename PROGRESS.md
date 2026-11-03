@@ -104,7 +104,21 @@ Steam 官方热门即将推出列表不给 follows 数字。旧逻辑曾把榜�
   - 顶部「当月新游」= **0**
   - 数据源面板：`0 款符合 follows > 5,000 · 120 款候选无关注度数据（已隐藏）`，状态「缺关注度」
 
+## 2026-11-03 17:20：手工关注度覆盖层，恢复 17 款真实新游
 
+- 阈值收紧后页面变成 0 款新游，但当天 SteamDB 实际有大量高关注新作。根因：本地 `data/releases.json` 只有 Steam 官方热门榜（全部 `follows = null`），严格阈值把候选全部隐藏。
+- 新增 **关注度覆盖层** 机制，用于 SteamDB 被 Cloudflare / 本机 IP 封禁时手工校准：
+  - `tools/import_steamdb.py` 把 SteamDB upcoming 的 TSV 转成 `data/steamdb-follows.json`；
+    TSV 列格式：`appid <TAB> 名称 <TAB> 日期(03 Nov) <TAB> follows(68,293) <TAB> +7d`。
+  - `releases.py` 新增 `_overlay_path` / `_load_overlay` / `_apply_overlay`，在 `_refresh` 合并后与 `_snapshot` 输出前统一套用；
+    覆盖层可补 follows / gain7d / 日期，也能把 Steam 列表里没有的 appid 直接新增进候选。
+  - 状态新增 `followsSource`：`live`（SteamDB 直连）/ `manual`（覆盖层）/ `none`（无关注度），并输出 `overlayAt`、`overlayRows`。
+  - 前端徽章对应三种状态，`manual` 时显示「关注数手工导入于 …」，`none` 时提示「N 款候选无关注度数据（已隐藏）」。
+- 本次导入 100 行 SteamDB upcoming → 99 条有效，**17 款 follows > 5000**：
+  11-03×4、11-04×4、11-05×4、11-06×2、11-09×3；Mycelarium（488）不在其中。
+- 静态快照重建：525 条更新 / 17 款新游；`followsSource = manual`，`tracked = 158`，`overlayRows = 99`。
+- 已推送 `089470f`，Pages 构建 `built`；线上 `data.json` 与 `index.html` 均已是新版（`followsSource` 出现 6 次、含「手工校准」徽章），线上实读 17 款、无 Mycelarium。
+- 全部 36 项回归测试通过。
 
 ### 本地打开
 
