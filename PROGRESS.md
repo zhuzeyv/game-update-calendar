@@ -65,6 +65,16 @@ follows > 5000 才显示，按北京时间归档。
 - `GET /api/releases`：只看新游数据。
 - `POST /api/releases/refresh`：只重新抓新游（不跑 22 个新闻源）。
 
+## 已发布到 GitHub
+
+- 仓库：<https://github.com/zhuzeyv/game-update-calendar>（public，main 分支）
+- 在线预览（静态快照）：<https://zhuzeyv.github.io/game-update-calendar/>
+- Pages 源是 `main` 分支的 `/docs` 目录。`docs/index.html` 是 `index.html` 的副本，
+  `docs/data.json` 是当时的数据快照；页面在 `/api/updates` 不可达时自动读 `data.json`，
+  并把同步状态标成「静态快照」，同时禁用刷新按钮。
+- **刷新快照**：`python tools/build_static.py` → 提交 `docs/` 并 push。
+  没有配 CI，快照不会自己更新。
+
 ## 如何继续
 
 ### 本地打开
