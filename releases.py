@@ -580,6 +580,8 @@ class ReleaseStore:
             error = steamdb_error or steam_error or "两个来源都没有返回数据"
             stale = False
 
+        merged = _within_window(self._apply_overlay(merged), today)
+
         if merged and not stale:
             # The first sync only records a baseline: everything it sees is
             # "already there", so nothing is flagged as new until the next
@@ -606,6 +608,63 @@ class ReleaseStore:
         )
         return self.snapshot()
 
+    # -- manual follows overlay ---------------------------------------
+    def _overlay_path(self) -> Path:
+        return self.cache_file.parent / "steamdb-follows.json"
+
+    def _load_overlay(self) -> tuple[dict[str, dict[str, Any]], str | None]:
+        """Real follower counts captured by hand when SteamDB is blocked.
+
+        ``tools/import_steamdb.py`` writes this file; it is applied on top
+        of whatever the collectors returned so the threshold still works.
+        """
+
+        path = self._overlay_path()
+        if not path.exists():
+            return {}, None
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8-sig"))
+        except (OSError, ValueError):
+            return {}, None
+        rows = payload.get("rows")
+        if not isinstance(rows, dict):
+            return {}, None
+        return rows, payload.get("capturedAt")
+
+    def _apply_overlay(self, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        rows, _captured = self._load_overlay()
+        if not rows:
+            return items
+        by_appid = {str(item.get("appid")): item for item in items}
+        for appid, row in rows.items():
+            if not isinstance(row, dict):
+                continue
+            target = by_appid.get(str(appid))
+            if target is None:
+                if not row.get("date"):
+                    continue
+                created = {
+                    "appid": int(appid),
+                    "name": row.get("name") or "",
+                    "date": row["date"],
+                    "dateRaw": row.get("dateRaw") or "",
+                    "follows": row.get("follows"),
+                    "gain7d": row.get("gain7d"),
+                    "price": "",
+                    "rank": None,
+                    "source": "steamdb",
+                }
+                items.append(created)
+                by_appid[str(appid)] = created
+                continue
+            if row.get("follows") is not None:
+                target["follows"] = row["follows"]
+            if row.get("gain7d") is not None:
+                target["gain7d"] = row["gain7d"]
+            if row.get("date"):
+                target["date"] = row["date"]
+        return items
+
     @staticmethod
     def _merge(steamdb_items: list[dict[str, Any]], steam_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """SteamDB rows win; the official list only supplies better dates."""
@@ -630,10 +689,12 @@ class ReleaseStore:
         today = today_cst().isoformat()
         threshold = follows_min()
         limit = popular_limit()
+        rows, overlay_at = self._load_overlay()
+        items = self._apply_overlay([dict(item) for item in self.items])
         visible: list[dict[str, Any]] = []
         unknown_follows = 0
         below_threshold = 0
-        for item in self.items:
+        for item in items:
             follows = item.get("follows")
             if follows is None:
                 unknown_follows += 1
@@ -642,6 +703,13 @@ class ReleaseStore:
                 visible.append(item)
             else:
                 below_threshold += 1
+
+        if self.mode == "steamdb":
+            follows_source = "live"
+        elif any(item.get("follows") is not None for item in visible) or rows:
+            follows_source = "manual"
+        else:
+            follows_source = "none"
 
         releases = []
         for item in sorted(visible, key=lambda row: (row["date"], -(row.get("follows") or 0))):
@@ -677,7 +745,10 @@ class ReleaseStore:
                 "followsMin": threshold,
                 "popularLimit": limit,
                 "count": len(releases),
-                "tracked": len(self.items),
+                "tracked": len(items),
+                "followsSource": follows_source,
+                "overlayAt": overlay_at,
+                "overlayRows": len(rows),
                 "excludedUnknownFollows": unknown_follows,
                 "excludedBelowThreshold": below_threshold,
                 "newCount": sum(1 for item in releases if item["isNew"]),

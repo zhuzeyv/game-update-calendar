@@ -2099,15 +2099,22 @@
         const statuses = data.sources;
         const release = data.releaseStatus || {};
         const releaseStale = Boolean(release.stale);
-        const releaseOk = release.mode === 'steamdb' && !releaseStale;
-        const releaseFallback = release.mode === 'steam' && !releaseStale;
-        const releaseStatusClass = releaseOk ? 'ok' : (releaseFallback || releaseStale ? 'warn' : 'off');
+        const followsSource = release.followsSource || (release.mode === 'steamdb' ? 'live' : 'none');
+        const releaseOk = !releaseStale && (followsSource === 'live' || followsSource === 'manual');
+        const releaseStatusClass = releaseStale ? 'warn' : (releaseOk ? 'ok' : 'warn');
         const releaseStatusText = releaseStale
           ? '缓存'
-          : (releaseOk ? '正常' : (releaseFallback ? '缺关注度' : (release.mode === 'idle' ? '未同步' : '失败')));
-        const releaseMeta = releaseOk
-          ? `${release.count || 0} 款符合 follows > ${formatNumber(release.followsMin)} · 最近成功 ${formatSync(release.fetchedAt)}`
-          : `${release.count || 0} 款符合 follows > ${formatNumber(release.followsMin)} · ${formatNumber(release.excludedUnknownFollows || 0)} 款候选无关注度数据（已隐藏） · 最近成功 ${formatSync(release.fetchedAt)}`;
+          : (followsSource === 'live'
+            ? '正常'
+            : (followsSource === 'manual'
+              ? '手工校准'
+              : (release.mode === 'idle' ? '未同步' : '缺关注度')));
+        const releaseMeta = [
+          `${release.count || 0} 款符合 follows > ${formatNumber(release.followsMin)}`,
+          followsSource === 'manual' ? `关注数手工导入于 ${formatSync(release.overlayAt)}` : '',
+          followsSource === 'none' ? `${formatNumber(release.excludedUnknownFollows || 0)} 款候选无关注度数据（已隐藏）` : '',
+          `最近成功 ${formatSync(release.fetchedAt)}`
+        ].filter(Boolean).join(' · ');
         let rows = `
           <div class="source-row">
             <span class="source-row-dot" style="--c:var(--release)" aria-hidden="true"></span>

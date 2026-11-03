@@ -1,0 +1,700 @@
+{
+  "version": 1,
+  "capturedAt": "2026-11-03T16:51:41+08:00",
+  "source": "steamdb-upcoming.tsv",
+  "rows": {
+    "3218230": {
+      "name": "ArcheAge Chronicles",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 68293,
+      "gain7d": 7598
+    },
+    "3629430": {
+      "name": "DREADMOOR",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 31087,
+      "gain7d": 3913
+    },
+    "2320980": {
+      "name": "Loftia",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 28878,
+      "gain7d": 2010
+    },
+    "4576490": {
+      "name": "Casualties: Unknown",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 27405,
+      "gain7d": 927
+    },
+    "3581230": {
+      "name": "Cozy Game Restoration",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 10897,
+      "gain7d": 651
+    },
+    "5160800": {
+      "name": "Find The Needle",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 8765,
+      "gain7d": 1072
+    },
+    "3204330": {
+      "name": "County of Fortune",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 17919,
+      "gain7d": 1507
+    },
+    "4251460": {
+      "name": "Godzilla: Destroy All Monsters Melee Remastered",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 10351,
+      "gain7d": 1360
+    },
+    "4358660": {
+      "name": "Hull Rupture",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 26726,
+      "gain7d": 15285
+    },
+    "4733590": {
+      "name": "Perfect Wives Next Door",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 2137,
+      "gain7d": 441
+    },
+    "4430260": {
+      "name": "Beat For Speed",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 1846,
+      "gain7d": 333
+    },
+    "5037200": {
+      "name": "just volleyball",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 6953,
+      "gain7d": 2073
+    },
+    "2411200": {
+      "name": "Underkeep",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 9002,
+      "gain7d": 1116
+    },
+    "2522120": {
+      "name": "Airframe Ultra",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 7933,
+      "gain7d": 241
+    },
+    "4459590": {
+      "name": "Slotbound",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 5011,
+      "gain7d": 179
+    },
+    "3891160": {
+      "name": "CRYMELIGHT",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 4159,
+      "gain7d": 338
+    },
+    "5266240": {
+      "name": "Potato Please",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 2137,
+      "gain7d": 267
+    },
+    "5118500": {
+      "name": "Safari-TV",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 2472,
+      "gain7d": 329
+    },
+    "3296060": {
+      "name": "Escape Academy 2: Back 2 School",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 2035,
+      "gain7d": 104
+    },
+    "2378230": {
+      "name": "Neo Junk City",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 4457,
+      "gain7d": 271
+    },
+    "3572090": {
+      "name": "Dominus Gladiatus",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 3781,
+      "gain7d": 741
+    },
+    "2991310": {
+      "name": "Eternal Palace Sakura",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 3517,
+      "gain7d": 341
+    },
+    "3577020": {
+      "name": "Clean Start",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 2580,
+      "gain7d": 128
+    },
+    "3727090": {
+      "name": "Horses of Hoofprint Bay",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 5974,
+      "gain7d": 262
+    },
+    "3546610": {
+      "name": "Wielders of the Essence",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 3595,
+      "gain7d": 203
+    },
+    "2433560": {
+      "name": "Meadgard",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 2743,
+      "gain7d": 265
+    },
+    "1892100": {
+      "name": "HEART ABYSS",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 5711,
+      "gain7d": 104
+    },
+    "4463730": {
+      "name": "Sexpatch: Horny Capes",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 5513,
+      "gain7d": 326
+    },
+    "5096020": {
+      "name": "LYSSA: Goddess of Rage",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 5259,
+      "gain7d": 1195
+    },
+    "4559930": {
+      "name": "Oboro no Ichi",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 2793,
+      "gain7d": 439
+    },
+    "2953170": {
+      "name": "Dungeons & Furry",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 3507,
+      "gain7d": 177
+    },
+    "4402200": {
+      "name": "Project Tomorrow",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 3325,
+      "gain7d": 311
+    },
+    "4596170": {
+      "name": "Raid of Lust: Match & Magic",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 3224,
+      "gain7d": 50
+    },
+    "3002130": {
+      "name": "Theos: Cities Of Myth",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 3078,
+      "gain7d": 395
+    },
+    "3758950": {
+      "name": "Death at Fleming Manor",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 3156,
+      "gain7d": 492
+    },
+    "5086460": {
+      "name": "PeeVPee",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 1441,
+      "gain7d": 367
+    },
+    "4834760": {
+      "name": "Pool of Radiance: Ruins of Myth Drannor",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 2977,
+      "gain7d": 805
+    },
+    "5101960": {
+      "name": "Dungeons & Dynasties",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 2973,
+      "gain7d": 1123
+    },
+    "3273260": {
+      "name": "Lost Host",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 2919,
+      "gain7d": 164
+    },
+    "2861730": {
+      "name": "Food Devils",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 2893,
+      "gain7d": 208
+    },
+    "3826290": {
+      "name": "组长！怨念请查收！",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 2648,
+      "gain7d": 45
+    },
+    "1460810": {
+      "name": "Dungeon Munchies 2",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 2527,
+      "gain7d": 312
+    },
+    "3275210": {
+      "name": "Pionero Capital",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 2197,
+      "gain7d": 275
+    },
+    "4318080": {
+      "name": "ALTEREDBLOOD+ [AB+]",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 2173,
+      "gain7d": 329
+    },
+    "4725170": {
+      "name": "Elven Huntress: Sunveil",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 2114,
+      "gain7d": 722
+    },
+    "4651930": {
+      "name": "Sexy Gamblers: Kakaitan Legend DX",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 2080,
+      "gain7d": 307
+    },
+    "3456660": {
+      "name": "PAYDAY: Aces High",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 2070,
+      "gain7d": 260
+    },
+    "4956920": {
+      "name": "Thicc Magic. Elves' Perverted Beauty Standards.gif",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 1928,
+      "gain7d": 312
+    },
+    "3432860": {
+      "name": "Psycho-Sleuth",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 1859,
+      "gain7d": 140
+    },
+    "4195140": {
+      "name": "PIX Football Manager",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 1747,
+      "gain7d": 122
+    },
+    "4540280": {
+      "name": "Sinful Survivors",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 1728,
+      "gain7d": 285
+    },
+    "4188260": {
+      "name": "Cozy~Fishing Kitten",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 1816,
+      "gain7d": 48
+    },
+    "3393720": {
+      "name": "Ramen Shop Simulator",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 1716,
+      "gain7d": 249
+    },
+    "4427790": {
+      "name": "Total Blade: Mythology",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 1465,
+      "gain7d": 633
+    },
+    "724930": {
+      "name": "Last Chickenburg",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 1464,
+      "gain7d": 68
+    },
+    "4551060": {
+      "name": "Salt and Soil: A Frontier Family Sim",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 1445,
+      "gain7d": 443
+    },
+    "4088720": {
+      "name": "Pogo Together",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 1476,
+      "gain7d": 6
+    },
+    "4572120": {
+      "name": "Dirt Clicker",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 1271,
+      "gain7d": 90
+    },
+    "5028050": {
+      "name": "Traffic Architect",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 1258,
+      "gain7d": 474
+    },
+    "3529090": {
+      "name": "Astra Bestiary",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 1213,
+      "gain7d": 135
+    },
+    "4767130": {
+      "name": "King in the Mountain",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 1212,
+      "gain7d": 71
+    },
+    "4776500": {
+      "name": "Carry On Together",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 1125,
+      "gain7d": 341
+    },
+    "2784180": {
+      "name": "Seleka-san who Exposes unnoticed with Naked Coat",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 1115,
+      "gain7d": 784
+    },
+    "4468540": {
+      "name": "It's About Pirates",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 1059,
+      "gain7d": 181
+    },
+    "2218060": {
+      "name": "Backdraft",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 1036,
+      "gain7d": 197
+    },
+    "3339970": {
+      "name": "WendyQuest: Legend of the Four Corner Stones",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 966,
+      "gain7d": 911
+    },
+    "2983480": {
+      "name": "Cinema Manager Simulator",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 902,
+      "gain7d": 73
+    },
+    "3725550": {
+      "name": "The Ring Of Succubus Queen",
+      "date": "2026-11-07",
+      "dateRaw": "07 Nov",
+      "follows": 899,
+      "gain7d": 134
+    },
+    "5064170": {
+      "name": "Go Next!",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 878,
+      "gain7d": 122
+    },
+    "3646950": {
+      "name": "Ghost Hunting Journal",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 873,
+      "gain7d": 29
+    },
+    "4612650": {
+      "name": "Metro Anomaly",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 859,
+      "gain7d": 95
+    },
+    "4184810": {
+      "name": "Bullet Meltdown",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 952,
+      "gain7d": 901
+    },
+    "2231090": {
+      "name": "Number Machine: Math Factory",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 849,
+      "gain7d": 93
+    },
+    "5182720": {
+      "name": "Waifu Curator",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 839,
+      "gain7d": 193
+    },
+    "4900110": {
+      "name": "Oops… I Hooked Up with a Mermaid 🎣😳",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 806,
+      "gain7d": 114
+    },
+    "2822740": {
+      "name": "ONE FENIX DOWN",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 775,
+      "gain7d": 85
+    },
+    "4476270": {
+      "name": "Crown & Coin: The Hundred Years",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 775,
+      "gain7d": 111
+    },
+    "5217440": {
+      "name": "FailRooms",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 752,
+      "gain7d": 173
+    },
+    "4286110": {
+      "name": "妹調教日記",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 744,
+      "gain7d": 266
+    },
+    "1587920": {
+      "name": "Undead Development 2",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 734,
+      "gain7d": 106
+    },
+    "3760370": {
+      "name": "Kick",
+      "date": "2026-11-03",
+      "dateRaw": "03 Nov",
+      "follows": 729,
+      "gain7d": 52
+    },
+    "3573120": {
+      "name": "SpellChain",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 722,
+      "gain7d": 198
+    },
+    "5119400": {
+      "name": "WORKS: Motorsport Factory",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 719,
+      "gain7d": 291
+    },
+    "4809750": {
+      "name": "明末：力挽狂澜",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 803,
+      "gain7d": 210
+    },
+    "4337040": {
+      "name": "Noa and the Bandits' Den",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 674,
+      "gain7d": 95
+    },
+    "3645540": {
+      "name": "HAVKER-MAN X",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 657,
+      "gain7d": 90
+    },
+    "4165740": {
+      "name": "Vena",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 645,
+      "gain7d": 35
+    },
+    "4408320": {
+      "name": "BATTLE BEARS GOLD",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 645,
+      "gain7d": 55
+    },
+    "4088360": {
+      "name": "Funeral for the Sun",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 619,
+      "gain7d": 62
+    },
+    "5113760": {
+      "name": "Echo Mates",
+      "date": "2026-11-04",
+      "dateRaw": "04 Nov",
+      "follows": 619,
+      "gain7d": 90
+    },
+    "3433110": {
+      "name": "Cinema Theater Tycoon",
+      "date": "2026-11-09",
+      "dateRaw": "09 Nov",
+      "follows": 610,
+      "gain7d": 72
+    },
+    "4904200": {
+      "name": "Civitas: World Simulator",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 609,
+      "gain7d": 151
+    },
+    "3591900": {
+      "name": "Chivalware",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 596,
+      "gain7d": 35
+    },
+    "4139580": {
+      "name": "Where the Seeds Fall",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 589,
+      "gain7d": 112
+    },
+    "4374020": {
+      "name": "GoGeez",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 674,
+      "gain7d": null
+    },
+    "4633120": {
+      "name": "Voxotron",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 567,
+      "gain7d": 47
+    },
+    "4420660": {
+      "name": "ZONE L.O.S.T.",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 559,
+      "gain7d": 120
+    },
+    "4802170": {
+      "name": "EraStorm: SandStorm",
+      "date": "2026-11-06",
+      "dateRaw": "06 Nov",
+      "follows": 658,
+      "gain7d": 130
+    },
+    "5115810": {
+      "name": "ONE MORE TERM",
+      "date": "2026-11-05",
+      "dateRaw": "05 Nov",
+      "follows": 654,
+      "gain7d": 5
+    }
+  }
+}
