@@ -1,0 +1,2628 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080b10">
+  <meta name="description" content="从官方更新接口自动汇总 22 款游戏的每日更新，月历与游戏矩阵双视图。">
+  <title>游戏更新日历 · Official Patch Tracker</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23d7ff5f'/%3E%3Cpath d='M18 23h28M18 32h28M18 41h28' stroke='%230d1204' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --bg: #070a0e;
+      --panel: #0d1219;
+      --panel-raised: #111821;
+      --line: #222c39;
+      --line-soft: #19222d;
+      --text: #e9eef6;
+      --text-soft: #c4cfdd;
+      --muted: #8794a6;
+      --faint: #596576;
+      --accent: #d7ff5f;
+      --accent-strong: #e5ff8a;
+      --accent-ink: #0f1403;
+      --green: #55e0a3;
+      --amber: #e8b45e;
+      --danger: #ff7a78;
+      --release: #a78bfa;
+      --font-ui: "Segoe UI Variable", "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+      --font-num: "Bahnschrift", "DIN Alternate", "Segoe UI", "Microsoft YaHei", sans-serif;
+      --radius: 16px;
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    html, body { margin: 0; min-height: 100%; background: var(--bg); }
+
+    body {
+      position: relative;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 12px;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      background:
+        radial-gradient(950px 520px at 82% -12%, rgba(190, 255, 80, .075), transparent 58%),
+        radial-gradient(900px 580px at 2% 112%, rgba(73, 129, 255, .075), transparent 60%),
+        var(--bg);
+    }
+
+    body.modal-open { overflow: hidden; }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .5;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, .018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .018) 1px, transparent 1px);
+      background-size: 52px 52px;
+      mask-image: radial-gradient(ellipse at 50% 0%, #000 5%, transparent 72%);
+    }
+
+    ::selection { color: #fff; background: rgba(215, 255, 95, .24); }
+
+    button, input, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    button:disabled { cursor: not-allowed; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      border: 2px solid transparent;
+      border-radius: 20px;
+      background: #2c3746;
+      background-clip: content-box;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: #3c4a5c; background-clip: content-box; }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      max-width: 1880px;
+      height: 100vh;
+      height: 100dvh;
+      margin: 0 auto;
+      padding: 18px 22px 20px;
+    }
+
+    /* ---------- Top bar ---------- */
+    .topbar { display: flex; flex: none; align-items: center; gap: 22px; min-height: 44px; }
+
+    .brand { display: flex; align-items: center; gap: 11px; min-width: 236px; }
+
+    .brand-mark {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      flex: none;
+      place-items: center;
+      color: var(--accent-ink);
+      border-radius: 11px;
+      background: linear-gradient(145deg, var(--accent-strong), #b4df39);
+      box-shadow: 0 0 30px rgba(200, 255, 70, .13), inset 0 1px 0 rgba(255, 255, 255, .35);
+    }
+
+    .brand-mark svg { width: 23px; height: 23px; }
+    .brand-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+    .brand-title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 680;
+      line-height: 1.2;
+      letter-spacing: .01em;
+    }
+
+    .brand-sub {
+      color: var(--faint);
+      font-family: var(--font-num);
+      font-size: 7.5px;
+      font-weight: 600;
+      line-height: 1.4;
+      letter-spacing: .14em;
+      white-space: nowrap;
+    }
+
+    .brand-sub i {
+      display: inline-block;
+      width: 3px;
+      height: 3px;
+      margin: 0 4px 1px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: .8;
+    }
+
+    .top-stats { display: flex; align-items: center; gap: 16px; margin-left: auto; padding: 0 2px; }
+    .stat { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+
+    .stat-num {
+      color: #f7faff;
+      font-family: var(--font-num);
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .01em;
+    }
+
+    .stat-label { color: var(--muted); font-size: 9.5px; letter-spacing: .03em; }
+    .stat-sep { width: 1px; height: 15px; background: var(--line); }
+    .top-actions { display: flex; flex: none; align-items: center; gap: 7px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 34px;
+      padding: 0 12px;
+      color: #c8d2e0;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: .02em;
+      white-space: nowrap;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #111821;
+      transition: color .16s ease, background .16s ease, border-color .16s ease, transform .12s ease;
+    }
+
+    .btn svg { width: 14px; height: 14px; flex: none; }
+    .btn:hover { color: #f3f7fc; border-color: #354254; background: #17202b; }
+    .btn:active { transform: translateY(1px); }
+    .btn.primary {
+      color: var(--accent-ink);
+      border-color: var(--accent);
+      background: var(--accent);
+      box-shadow: 0 5px 20px rgba(215, 255, 95, .13);
+    }
+    .btn.primary:hover { color: #0b1001; border-color: var(--accent-strong); background: var(--accent-strong); }
+    .btn:disabled { opacity: .6; }
+    .btn.loading svg { animation: spin 1s linear infinite; }
+
+    .source-badge {
+      display: inline-flex;
+      align-items: center;
+      height: 16px;
+      padding: 0 5px;
+      color: #9eacbd;
+      font-family: var(--font-num);
+      font-size: 7px;
+      line-height: 1;
+      letter-spacing: .02em;
+      border: 1px solid #2b3746;
+      border-radius: 4px;
+      background: #0b1118;
+    }
+    .source-badge.warn { color: var(--amber); border-color: rgba(232, 180, 94, .25); background: rgba(232, 180, 94, .06); }
+
+    /* ---------- Panels ---------- */
+    .workspace {
+      display: grid;
+      flex: 1;
+      grid-template-columns: minmax(0, 1fr) 390px;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .panel {
+      position: relative;
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(20, 27, 37, .93), rgba(11, 16, 23, .98));
+      box-shadow: 0 28px 80px -38px rgba(0, 0, 0, .95), inset 0 1px 0 rgba(255, 255, 255, .025);
+    }
+
+    /* ---------- Calendar ---------- */
+    .calendar-panel { display: flex; flex-direction: column; min-height: 0; }
+
+    .calendar-panel::before {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      top: -140px;
+      right: -80px;
+      width: 360px;
+      height: 300px;
+      pointer-events: none;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(215, 255, 95, .055), transparent 68%);
+    }
+
+    .cal-head {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex: none;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 19px 22px 14px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--faint);
+      font-family: var(--font-num);
+      font-size: 8.5px;
+      font-weight: 600;
+      line-height: 1;
+      letter-spacing: .15em;
+      white-space: nowrap;
+    }
+
+    .eyebrow-line { width: 15px; height: 1px; flex: none; background: var(--accent); opacity: .7; }
+    .month-title { display: flex; align-items: baseline; gap: 9px; margin-top: 7px; }
+    #monthLabel { font-size: 32px; font-weight: 650; line-height: 1; letter-spacing: -.035em; }
+
+    #yearLabel {
+      padding: 4px 7px;
+      color: var(--muted);
+      font-family: var(--font-num);
+      font-size: 10px;
+      font-weight: 500;
+      line-height: 1;
+      letter-spacing: .08em;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: #0b1016;
+    }
+
+    .cal-tools { display: flex; align-items: center; gap: 8px; }
+
+    .view-switch {
+      display: flex;
+      gap: 2px;
+      padding: 2px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #090e14;
+    }
+
+    .view-switch button {
+      height: 24px;
+      padding: 0 9px;
+      color: #687588;
+      font-size: 9.5px;
+      font-weight: 600;
+      letter-spacing: .02em;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      transition: color .15s ease, background .15s ease;
+    }
+    .view-switch button:hover { color: var(--text-soft); }
+    .view-switch button.active { color: #eaf0f7; background: #1a2330; box-shadow: 0 1px 2px rgba(0, 0, 0, .35); }
+
+    .cal-nav {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 2px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #090e14;
+    }
+
+    .nav-btn, .nav-today {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 24px;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      transition: color .15s ease, background .15s ease;
+    }
+    .nav-btn { width: 27px; color: #7a8798; }
+    .nav-btn svg { width: 13px; height: 13px; }
+    .nav-btn:hover { color: #f7faff; background: #1a2330; }
+
+    .nav-today {
+      padding: 0 8px;
+      color: #aeb9c7;
+      font-size: 9.5px;
+      font-weight: 600;
+      border-left: 1px solid var(--line-soft);
+      border-right: 1px solid var(--line-soft);
+      border-radius: 0;
+    }
+    .nav-today:hover { color: var(--accent); background: rgba(215, 255, 95, .045); }
+
+    /* Filter bar */
+    .cal-filterbar {
+      display: flex;
+      flex: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 45px;
+      padding: 7px 15px 7px 18px;
+      border-bottom: 1px solid var(--line-soft);
+      background: #0b1016;
+    }
+
+    .filter-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+    .filter-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 30px;
+      min-width: 0;
+      max-width: 220px;
+      padding: 0 8px;
+      color: #c3cedb;
+      font-size: 10px;
+      font-weight: 600;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #10171f;
+      transition: border-color .15s ease, background .15s ease;
+    }
+    .filter-btn:hover, .filter-btn[aria-expanded="true"] { border-color: #3a485b; background: #17212c; }
+    .filter-btn > svg:first-child { width: 12px; height: 12px; color: #6f7c8e; flex: none; }
+    .filter-btn .chev { width: 11px; height: 11px; color: #5f6c7d; flex: none; transition: transform .15s ease; }
+    .filter-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+    .filter-btn .filter-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .filter-btn.active { border-color: rgba(215, 255, 95, .28); background: rgba(215, 255, 95, .045); }
+
+    .filter-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 16px;
+      padding: 0 4px;
+      color: #8e9bad;
+      font-family: var(--font-num);
+      font-size: 7px;
+      border: 1px solid #2b3746;
+      border-radius: 4px;
+      background: #0a1016;
+    }
+    .filter-btn.active .filter-count { color: var(--accent); border-color: rgba(215, 255, 95, .22); }
+
+    .scope-switch {
+      display: flex;
+      gap: 2px;
+      padding: 2px;
+      height: 30px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #090e14;
+    }
+
+    .scope-switch button {
+      height: 24px;
+      padding: 0 8px;
+      color: #687588;
+      font-size: 9px;
+      font-weight: 600;
+      white-space: nowrap;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+    }
+    .scope-switch button:hover { color: var(--text-soft); }
+    .scope-switch button.active { color: var(--accent); background: rgba(215, 255, 95, .07); }
+
+    .sync-status { display: inline-flex; align-items: center; gap: 6px; min-width: 0; color: #647183; font-size: 8.5px; white-space: nowrap; }
+    .sync-dot { width: 5px; height: 5px; flex: none; border-radius: 50%; background: #657284; }
+    .sync-dot.ok { background: var(--green); box-shadow: 0 0 7px rgba(85, 224, 163, .55); }
+    .sync-dot.warn { background: var(--amber); box-shadow: 0 0 7px rgba(232, 180, 94, .45); }
+    .sync-dot.error { background: var(--danger); box-shadow: 0 0 7px rgba(255, 122, 120, .45); }
+    .sync-dot.spin { background: transparent; border: 1px solid var(--accent); border-top-color: transparent; animation: spin .8s linear infinite; }
+    .sync-warn { color: var(--amber); }
+
+    .month-view { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+
+    .weekdays {
+      display: grid;
+      flex: none;
+      grid-template-columns: repeat(7, 1fr);
+      border-bottom: 1px solid var(--line-soft);
+      background: #0b1016;
+    }
+
+    .weekdays span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      height: 31px;
+      padding-left: 10px;
+      color: #707d8f;
+      font-size: 9px;
+      font-weight: 650;
+      letter-spacing: .04em;
+    }
+    .weekdays small { color: #404b5a; font-family: var(--font-num); font-size: 6.5px; font-weight: 600; letter-spacing: .1em; }
+    .weekdays span.is-weekend { color: #a08262; }
+
+    .calendar-grid {
+      display: grid;
+      flex: 1;
+      grid-template-columns: repeat(7, 1fr);
+      grid-template-rows: repeat(6, minmax(0, 1fr));
+      gap: 1px;
+      min-height: 0;
+      overflow: hidden;
+      background: var(--line-soft);
+    }
+
+    .calendar-grid.animate .day-cell { animation: cell-in .32s both; animation-delay: calc(var(--i) * 5ms); }
+    @keyframes cell-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .day-cell {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      padding: 8px 9px 7px;
+      overflow: hidden;
+      color: inherit;
+      text-align: left;
+      font: inherit;
+      border: 0;
+      background: #0d131a;
+      transition: background .15s ease, box-shadow .15s ease;
+    }
+    .day-cell:hover { background: #141c26; }
+    .day-cell.is-weekend:not(.is-other) { background: #0d1219; }
+    .day-cell.is-weekend:not(.is-other):hover { background: #151c25; }
+    .day-cell.is-other { background: #090e14; }
+    .day-cell.is-today { box-shadow: inset 0 0 0 1px rgba(215, 255, 95, .22); }
+    .day-cell.is-selected {
+      background: linear-gradient(155deg, rgba(215, 255, 95, .095), rgba(215, 255, 95, .018) 48%, rgba(13, 19, 26, .96));
+      box-shadow: inset 0 0 0 1px rgba(215, 255, 95, .62);
+    }
+    .day-cell.is-selected::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--accent); }
+    .day-cell:focus-visible { z-index: 3; outline: 2px solid var(--accent); outline-offset: -2px; }
+
+    .day-top { display: flex; align-items: center; justify-content: space-between; gap: 4px; min-height: 23px; }
+
+    .day-num {
+      display: grid;
+      width: 23px;
+      height: 23px;
+      place-items: center;
+      color: #c6d0dd;
+      font-family: var(--font-num);
+      font-size: 12.5px;
+      font-weight: 500;
+      line-height: 1;
+      border-radius: 50%;
+      font-variant-numeric: tabular-nums;
+    }
+    .day-cell.is-other .day-num { color: #35404e; }
+    .day-cell.is-weekend:not(.is-other) .day-num { color: #a68b6d; }
+    .day-cell.is-today .day-num { color: var(--accent-ink); font-weight: 650; background: var(--accent); box-shadow: 0 0 14px rgba(215, 255, 95, .16); }
+    .day-cell.is-selected:not(.is-today) .day-num { color: var(--accent); box-shadow: inset 0 0 0 1px rgba(215, 255, 95, .35); }
+
+    .day-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 5px;
+      color: var(--green);
+      font-family: var(--font-num);
+      font-size: 8px;
+      font-weight: 600;
+      line-height: 1;
+      white-space: nowrap;
+      border: 1px solid rgba(85, 224, 163, .16);
+      border-radius: 999px;
+      background: rgba(85, 224, 163, .07);
+    }
+    .day-count::before { content: ""; width: 3px; height: 3px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px rgba(85, 224, 163, .8); }
+    .day-empty { color: #4d5968; font-size: 8px; font-weight: 500; letter-spacing: .02em; }
+    .day-flags { display: inline-flex; align-items: center; gap: 3px; }
+    .day-count.rel {
+      color: var(--release);
+      border-color: rgba(167, 139, 250, .22);
+      background: rgba(167, 139, 250, .09);
+    }
+    .day-count.rel::before { background: var(--release); box-shadow: 0 0 6px rgba(167, 139, 250, .85); }
+
+    .day-events { display: flex; flex-direction: column; gap: 3px; min-height: 0; margin-top: auto; padding-top: 4px; overflow: hidden; }
+
+    .event {
+      display: flex;
+      flex: none;
+      align-items: center;
+      gap: 4px;
+      height: 17px;
+      min-width: 0;
+      padding: 0 5px;
+      overflow: hidden;
+      color: color-mix(in srgb, var(--c) 48%, #dfe8f4);
+      font-size: 8.5px;
+      font-weight: 550;
+      line-height: 1;
+      white-space: nowrap;
+      border-radius: 3px;
+      background: color-mix(in srgb, var(--c) 8%, transparent);
+    }
+    .event i { width: 4px; height: 4px; flex: none; border-radius: 50%; background: var(--c); box-shadow: 0 0 6px color-mix(in srgb, var(--c) 55%, transparent); }
+    .event span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .event.is-release {
+      color: color-mix(in srgb, var(--release) 55%, #eae4ff);
+      background: rgba(167, 139, 250, .1);
+      box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .12);
+    }
+    .event.is-release i { background: var(--release); box-shadow: 0 0 6px rgba(167, 139, 250, .8); }
+    .event.is-release.new::after {
+      content: "NEW";
+      flex: none;
+      margin-left: auto;
+      color: var(--release);
+      font-family: var(--font-num);
+      font-size: 6.5px;
+      font-weight: 750;
+      letter-spacing: .04em;
+    }
+
+    .cal-foot {
+      display: flex;
+      flex: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 15px;
+      color: var(--faint);
+      font-size: 8.5px;
+      border-top: 1px solid var(--line-soft);
+      background: #0b1016;
+    }
+    .legend { display: flex; align-items: center; gap: 13px; }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .legend-dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; }
+    .legend-dot.has { background: var(--green); box-shadow: 0 0 6px rgba(85, 224, 163, .65); }
+    .legend-dot.none { border: 1px solid #3b4756; background: transparent; }
+    .legend-dot.release { background: var(--release); box-shadow: 0 0 6px rgba(167, 139, 250, .65); }
+    .legend-official { color: #788597; }
+    .foot-hint { overflow: hidden; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+
+    kbd {
+      display: inline-block;
+      min-width: 14px;
+      padding: 1px 4px;
+      color: #8d9aab;
+      font-family: var(--font-num);
+      font-size: 7.5px;
+      text-align: center;
+      border: 1px solid #2c3745;
+      border-bottom-color: #3a4656;
+      border-radius: 3px;
+      background: #131b24;
+    }
+
+    /* ---------- Matrix ---------- */
+    .matrix-view { display: flex; flex: 1; min-height: 0; padding: 10px 12px 0; }
+    .matrix-scroll { flex: 1; overflow: auto; overscroll-behavior: contain; border: 1px solid var(--line-soft); border-radius: 10px; background: #080d12; }
+    .matrix-grid { display: grid; gap: 1px; min-height: 100%; background: #1a2430; }
+
+    .matrix-corner, .matrix-day {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      height: 30px;
+      border: 0;
+      background: #0e151d;
+    }
+    .matrix-corner {
+      left: 0;
+      z-index: 6;
+      justify-content: space-between;
+      padding: 0 9px;
+      color: #707d8f;
+      font-size: 8px;
+      font-weight: 650;
+      letter-spacing: .05em;
+      box-shadow: 7px 0 14px -12px #000;
+    }
+    .matrix-corner small { color: #3f4a59; font-family: var(--font-num); font-size: 6px; letter-spacing: .1em; }
+
+    .matrix-day { justify-content: center; color: #7c8999; font-family: var(--font-num); font-size: 8.5px; font-weight: 500; cursor: pointer; transition: color .14s ease, background .14s ease; }
+    .matrix-day:hover { color: #f3f7fc; background: #17202b; }
+    .matrix-day.is-weekend { color: #a18463; background: #10161d; }
+    .matrix-day.is-today { color: var(--accent-ink); font-weight: 700; background: var(--accent); }
+    .matrix-day.is-selected:not(.is-today) { color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+
+    .matrix-game {
+      position: sticky;
+      left: 0;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      padding: 0 9px;
+      color: #aeb9c8;
+      font-size: 9px;
+      border: 0;
+      background: #0d131a;
+      box-shadow: 7px 0 14px -12px #000;
+    }
+    .matrix-game-dot { width: 4px; height: 4px; flex: none; border-radius: 50%; background: var(--c); }
+    .matrix-game-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .matrix-count { margin-left: auto; padding-left: 4px; color: #4d5968; font-family: var(--font-num); font-size: 7.5px; font-variant-numeric: tabular-nums; }
+    .matrix-source { margin-left: auto; color: #596778; font-size: 6px; letter-spacing: .04em; }
+
+    .matrix-cell {
+      position: relative;
+      display: grid;
+      min-width: 0;
+      padding: 0;
+      place-items: center;
+      color: #0a0e13;
+      font-family: var(--font-num);
+      font-size: 7.5px;
+      font-weight: 800;
+      line-height: 1;
+      border: 0;
+      background: #0d131a;
+      transition: background .12s ease, box-shadow .12s ease;
+    }
+    .matrix-cell::after { content: "+"; position: absolute; color: var(--c); font-size: 9px; opacity: 0; transition: opacity .12s ease; }
+    .matrix-cell:hover { background: color-mix(in srgb, var(--c) 11%, #0d131a); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 30%, transparent); }
+    .matrix-cell:hover::after { opacity: .55; }
+    .matrix-cell.is-today { box-shadow: inset 0 0 0 1px rgba(215, 255, 95, .12); }
+    .matrix-cell.is-selected { box-shadow: inset 0 0 0 1px rgba(215, 255, 95, .42); }
+    .matrix-cell.on { color: #0a0e13; background: var(--c); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .11); }
+    .matrix-cell.on::after { content: "✓"; color: rgba(8, 12, 16, .78); font-size: 8px; opacity: 1; }
+    .matrix-cell.on.multi::after { content: ""; }
+    .matrix-cell.on.multi span { position: relative; z-index: 1; }
+    .matrix-cell.on:hover { filter: brightness(1.08); }
+    .matrix-cell:focus-visible { z-index: 5; outline: 2px solid var(--accent); outline-offset: -2px; }
+
+    /* ---------- Detail ---------- */
+    .detail-panel { display: flex; flex-direction: column; min-height: 0; }
+    .detail-head { flex: none; padding: 17px 18px 0; }
+    .detail-title-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 7px; margin-top: 7px; }
+
+    .detail-title-row h2 { margin: 0; color: #f4f8fd; font-size: 24px; font-weight: 660; line-height: 1.1; letter-spacing: -.025em; }
+    .weekday { color: var(--muted); font-size: 10px; letter-spacing: .02em; }
+
+    .today-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 6px;
+      color: var(--accent);
+      font-size: 7.5px;
+      font-weight: 650;
+      line-height: 1;
+      border: 1px solid rgba(215, 255, 95, .2);
+      border-radius: 999px;
+      background: rgba(215, 255, 95, .055);
+    }
+    .today-badge i { width: 3px; height: 3px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px rgba(215, 255, 95, .8); }
+
+    .day-summary {
+      display: flex;
+      flex: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 12px 14px 10px;
+      padding: 11px 12px;
+      border: 1px solid #24303e;
+      border-radius: 11px;
+      background:
+        radial-gradient(120px 90px at 100% 0%, rgba(215, 255, 95, .045), transparent 75%),
+        linear-gradient(140deg, #121a23, #0d141b);
+    }
+
+    .summary-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
+    .summary-num { color: #f6f9fd; font-family: var(--font-num); font-size: 32px; font-weight: 600; line-height: .95; font-variant-numeric: tabular-nums; letter-spacing: -.04em; }
+    .summary-num.zero { color: #465363; }
+    .summary-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .summary-label { overflow: hidden; color: #d7e1ed; font-size: 10px; font-weight: 600; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+    .summary-sub { overflow: hidden; color: #546172; font-size: 8px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+
+    .status-pill {
+      display: inline-flex;
+      flex: none;
+      padding: 3px 6px;
+      font-size: 7.5px;
+      font-weight: 650;
+      line-height: 1;
+      white-space: nowrap;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+    }
+    .status-pill.has { color: var(--green); border-color: rgba(85, 224, 163, .2); background: rgba(85, 224, 163, .06); }
+    .status-pill.none { color: #748194; background: #111821; }
+
+    .update-list { flex: 1; min-height: 80px; padding: 0 14px 12px; overflow-y: auto; overscroll-behavior: contain; }
+
+    .update-card {
+      position: relative;
+      margin-bottom: 8px;
+      padding: 11px 12px 10px;
+      overflow: hidden;
+      border: 1px solid #232f3d;
+      border-radius: 10px;
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--c) 5%, transparent), transparent 52%),
+        #101720;
+      transition: border-color .15s ease, background .15s ease, transform .15s ease;
+    }
+    .update-card:hover { border-color: color-mix(in srgb, var(--c) 28%, #2a3544); background: #131c26; transform: translateY(-1px); }
+    .update-card::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 2px; border-radius: 2px; background: color-mix(in srgb, var(--c) 65%, transparent); }
+
+    .update-top { display: flex; align-items: center; gap: 7px; min-width: 0; }
+    .game-pill { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
+    .game-mono {
+      display: grid;
+      width: 20px;
+      height: 20px;
+      flex: none;
+      place-items: center;
+      color: #0a0e12;
+      font-family: var(--font-num);
+      font-size: 6.5px;
+      font-weight: 750;
+      border-radius: 5px;
+      background: var(--c);
+    }
+    .game-pill-name { overflow: hidden; color: #e0e8f2; font-size: 9.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+
+    .kind-badge {
+      margin-left: auto;
+      padding: 3px 5px;
+      font-size: 7px;
+      font-weight: 650;
+      line-height: 1;
+      white-space: nowrap;
+      border: 1px solid #2c3847;
+      border-radius: 4px;
+      background: #0c131a;
+    }
+    .kind-badge.patch { color: var(--green); border-color: rgba(85, 224, 163, .19); background: rgba(85, 224, 163, .05); }
+    .kind-badge.event { color: var(--accent); border-color: rgba(215, 255, 95, .2); background: rgba(215, 255, 95, .05); }
+    .kind-badge.announcement { color: #9dc4ff; border-color: rgba(130, 170, 255, .2); background: rgba(130, 170, 255, .05); }
+    .kind-badge.other { color: #8996a7; }
+    .kind-badge.release { color: var(--release); border-color: rgba(167, 139, 250, .24); background: rgba(167, 139, 250, .07); }
+
+    /* upcoming releases (SteamDB / Steam popular upcoming) */
+    .update-card.is-release {
+      border-color: rgba(167, 139, 250, .2);
+      background:
+        linear-gradient(135deg, rgba(167, 139, 250, .07), transparent 55%),
+        #101720;
+    }
+    .update-card.is-release:hover { border-color: rgba(167, 139, 250, .4); background: #141c27; }
+    .update-card.is-release::before { background: rgba(167, 139, 250, .75); }
+    .update-card.is-release .game-mono { color: #0b0912; background: var(--release); }
+    .release-new {
+      flex: none;
+      padding: 3px 5px;
+      color: #0d0a17;
+      font-family: var(--font-num);
+      font-size: 7px;
+      font-weight: 750;
+      line-height: 1;
+      letter-spacing: .04em;
+      border-radius: 4px;
+      background: var(--release);
+    }
+    .release-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 9px;
+      margin: 6px 0 0;
+      color: #8b95a8;
+      font-family: var(--font-num);
+      font-size: 8.5px;
+      line-height: 1.5;
+    }
+    .release-meta b { color: var(--release); font-weight: 650; }
+    .release-meta .hot { color: #9aa7bb; }
+    .release-group-title {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin: 2px 0 8px;
+      color: #7d8ba0;
+      font-size: 8px;
+      font-weight: 650;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .release-group-title::after { content: ""; flex: 1; height: 1px; background: #1e2833; }
+
+    .update-time { flex: none; color: #5a6779; font-family: var(--font-num); font-size: 7.5px; letter-spacing: .02em; }
+    .update-card h3 { margin: 8px 0 0; color: #e9eff7; font-size: 11.5px; font-weight: 600; line-height: 1.45; letter-spacing: -.005em; }
+    .update-card p { display: -webkit-box; margin: 5px 0 0; overflow: hidden; color: #7f8c9d; font-size: 9px; line-height: 1.55; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+    .update-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; padding-top: 7px; border-top: 1px solid #1d2733; }
+    .update-source { overflow: hidden; color: #526071; font-size: 7.5px; text-overflow: ellipsis; white-space: nowrap; }
+    .update-link { flex: none; color: #9eacbc; font-size: 8px; text-decoration: none; }
+    .update-link:hover { color: var(--accent); }
+
+    .empty-day {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 260px;
+      padding: 28px 18px;
+      text-align: center;
+      border: 1px dashed #25303e;
+      border-radius: 10px;
+      background: rgba(12, 17, 24, .55);
+    }
+    .empty-icon { display: grid; width: 34px; height: 34px; place-items: center; color: #637184; border: 1px solid #2b3747; border-radius: 10px; background: #111923; }
+    .empty-icon svg { width: 17px; height: 17px; }
+    .empty-day h3 { margin: 2px 0 0; color: #b9c5d3; font-size: 11px; font-weight: 600; }
+    .empty-day p { max-width: 230px; margin: 0; color: #5f6c7d; font-size: 8.5px; line-height: 1.55; }
+
+    .empty-reset { margin-top: 3px; padding: 4px 8px; color: #aab7c7; font-size: 8px; border: 1px solid #2b3747; border-radius: 5px; background: #141c26; }
+    .empty-reset:hover { color: var(--accent); border-color: rgba(215, 255, 95, .28); }
+
+    .detail-foot {
+      display: flex;
+      flex: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 16px;
+      color: #4a5666;
+      font-size: 7.5px;
+      border-top: 1px solid var(--line);
+      background: #0a0f15;
+    }
+    .detail-foot span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ---------- Filter popover ---------- */
+    .popover {
+      position: fixed;
+      z-index: 70;
+      width: 330px;
+      max-height: min(500px, calc(100vh - 90px));
+      overflow: hidden;
+      border: 1px solid #2a3544;
+      border-radius: 13px;
+      background: rgba(14, 21, 29, .98);
+      box-shadow: 0 24px 70px -20px #000, inset 0 1px 0 rgba(255, 255, 255, .03);
+      backdrop-filter: blur(14px);
+    }
+
+    .popover-head { display: flex; align-items: center; justify-content: space-between; padding: 11px 12px 9px; border-bottom: 1px solid var(--line-soft); }
+    .popover-head strong { color: #dce5f0; font-size: 10px; font-weight: 600; letter-spacing: .03em; }
+
+    .icon-btn {
+      display: grid;
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      place-items: center;
+      color: #7c899a;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+    }
+    .icon-btn:hover { color: #fff; background: #1b2430; }
+    .icon-btn svg { width: 13px; height: 13px; }
+
+    .popover-search { padding: 8px 10px 6px; }
+
+    .search-box { display: flex; align-items: center; gap: 6px; height: 29px; padding: 0 8px; border: 1px solid var(--line); border-radius: 7px; background: #090e14; }
+    .search-box:focus-within { border-color: rgba(215, 255, 95, .32); }
+    .search-box svg { width: 12px; height: 12px; flex: none; color: #5b6879; }
+    .search-box input { width: 100%; min-width: 0; padding: 0; color: #d7e1ed; font-size: 10px; border: 0; outline: 0; background: transparent; }
+    .search-box input::placeholder { color: #4e5a6a; }
+
+    .filter-list { max-height: 390px; padding: 2px 7px 8px; overflow-y: auto; }
+    .filter-group-title { padding: 8px 7px 4px; color: #586576; font-size: 7px; font-weight: 650; letter-spacing: .1em; }
+
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      width: 100%;
+      height: 33px;
+      padding: 0 7px;
+      text-align: left;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+    }
+    .filter-row:hover { background: #17202b; }
+    .filter-row.active { border-color: rgba(215, 255, 95, .2); background: rgba(215, 255, 95, .05); }
+    .filter-row.all-row { margin-bottom: 2px; }
+    .filter-dot { width: 5px; height: 5px; flex: none; border-radius: 50%; background: var(--c, #718095); }
+    .filter-name { min-width: 0; flex: 1; overflow: hidden; color: #b9c4d2; font-size: 9.5px; text-overflow: ellipsis; white-space: nowrap; }
+    .filter-row.active .filter-name { color: #f0f5fb; }
+    .filter-sub { margin-left: 4px; color: #4f5c6d; font-size: 7px; }
+
+    .filter-health { width: 4px; height: 4px; flex: none; border-radius: 50%; background: #5c6979; }
+    .filter-health.ok { background: var(--green); box-shadow: 0 0 5px rgba(85, 224, 163, .55); }
+    .filter-health.warn { background: var(--amber); }
+    .filter-health.off { background: #4a5666; }
+
+    .filter-number { min-width: 20px; color: #6e7b8c; font-family: var(--font-num); font-size: 7.5px; text-align: right; font-variant-numeric: tabular-nums; }
+    .filter-check { width: 13px; height: 13px; color: var(--accent); opacity: 0; }
+    .filter-row.active .filter-check { opacity: 1; }
+    .filter-empty { padding: 24px 10px; color: #5f6c7d; font-size: 9px; text-align: center; }
+
+    /* ---------- Source modal ---------- */
+    .modal { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .modal-backdrop { position: absolute; inset: 0; background: rgba(3, 6, 10, .72); backdrop-filter: blur(5px); }
+    .modal-panel {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      width: min(760px, 100%);
+      max-height: min(84vh, 820px);
+      overflow: hidden;
+      border: 1px solid #2a3544;
+      border-radius: 16px;
+      background: #0d131a;
+      box-shadow: 0 40px 120px -24px #000, inset 0 1px 0 rgba(255, 255, 255, .04);
+    }
+
+    .modal-head {
+      position: relative;
+      flex: none;
+      padding: 20px 22px 14px;
+      border-bottom: 1px solid var(--line-soft);
+      background: radial-gradient(320px 100px at 80% 0%, rgba(215, 255, 95, .05), transparent 70%);
+    }
+    .modal-head h2 { margin: 8px 0 0; font-size: 22px; font-weight: 660; letter-spacing: -.02em; }
+    .modal-head p { max-width: 590px; margin: 7px 0 0; color: #758294; font-size: 9.5px; line-height: 1.55; }
+    .modal-close { position: absolute; top: 16px; right: 16px; width: 28px; height: 28px; }
+    .modal-body { flex: 1; min-height: 0; padding: 14px 18px; overflow-y: auto; }
+
+    .source-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 13px; }
+    .source-summary-card { padding: 9px 10px; border: 1px solid #23303e; border-radius: 8px; background: #101821; }
+    .source-summary-card strong { display: block; color: #e8eff8; font-family: var(--font-num); font-size: 18px; font-weight: 600; line-height: 1; }
+    .source-summary-card span { display: block; margin-top: 4px; color: #607082; font-size: 7.5px; }
+
+    .source-note { margin: 0 0 12px; padding: 8px 10px; color: #718092; font-size: 8.5px; line-height: 1.55; border: 1px solid #1d2835; border-radius: 7px; background: #0a1016; }
+    .source-note strong { color: #a5b2c2; font-weight: 600; }
+
+    .source-row { display: flex; align-items: flex-start; gap: 8px; padding: 9px 7px; border-bottom: 1px solid #1a2430; }
+    .source-row:last-child { border-bottom: 0; }
+    .source-row-dot { width: 5px; height: 5px; flex: none; margin-top: 5px; border-radius: 50%; background: var(--c); }
+    .source-main { flex: 1; min-width: 0; }
+    .source-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px; }
+    .source-title strong { color: #d7e1ed; font-size: 9.5px; font-weight: 600; }
+    .source-title span { color: #596777; font-size: 8px; }
+    .source-meta { margin-top: 2px; color: #4f5d6d; font-size: 7.5px; line-height: 1.45; }
+    .source-error { margin-top: 2px; color: #a66d5b; font-size: 7.5px; line-height: 1.4; word-break: break-word; }
+    .source-side { display: flex; flex: none; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .source-status { padding: 3px 5px; font-size: 7px; font-weight: 650; line-height: 1; border: 1px solid #2c3847; border-radius: 4px; color: #7e8c9d; }
+    .source-status.ok { color: var(--green); border-color: rgba(85, 224, 163, .2); background: rgba(85, 224, 163, .05); }
+    .source-status.warn { color: var(--amber); border-color: rgba(232, 180, 94, .2); background: rgba(232, 180, 94, .05); }
+    .source-status.off { color: #778596; }
+    .source-link { color: #718092; font-size: 7.5px; text-decoration: none; white-space: nowrap; }
+    .source-link:hover { color: var(--accent); }
+
+    .modal-foot {
+      display: flex;
+      flex: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 18px;
+      border-top: 1px solid var(--line-soft);
+      background: #0a1016;
+    }
+    .modal-foot span { color: #4d5a6b; font-size: 7.5px; line-height: 1.4; }
+
+    /* ---------- Boot / toast ---------- */
+    .boot {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background:
+        radial-gradient(700px 500px at 50% 35%, rgba(160, 220, 70, .06), transparent 65%),
+        rgba(5, 8, 12, .94);
+      backdrop-filter: blur(10px);
+      transition: opacity .25s ease;
+    }
+    .boot.is-hidden { opacity: 0; pointer-events: none; }
+
+    .boot-card {
+      width: min(440px, 100%);
+      padding: 30px 28px 25px;
+      text-align: center;
+      border: 1px solid #25313f;
+      border-radius: 16px;
+      background: linear-gradient(160deg, #131c26, #0b1117);
+      box-shadow: 0 30px 100px -20px #000, inset 0 1px 0 rgba(255, 255, 255, .04);
+    }
+
+    .boot-logo {
+      display: grid;
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 15px;
+      place-items: center;
+      color: var(--accent-ink);
+      border-radius: 12px;
+      background: linear-gradient(145deg, var(--accent-strong), #b4df39);
+      box-shadow: 0 0 38px rgba(200, 255, 70, .13);
+    }
+    .boot-logo svg { width: 26px; height: 26px; }
+    .boot-spinner { width: 17px; height: 17px; margin: 0 auto 12px; border: 1.5px solid #3b4858; border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+    .boot-spinner.hidden { display: none; }
+    .boot h2 { margin: 0; color: #f0f5fb; font-size: 17px; font-weight: 650; letter-spacing: -.01em; }
+    .boot p { max-width: 330px; margin: 8px auto 0; color: #7b8899; font-size: 9.5px; line-height: 1.6; }
+    .boot-meta { min-height: 17px; margin-top: 12px; color: #667486; font-size: 8.5px; }
+    .boot code { display: block; margin: 12px 0 0; padding: 9px 10px; color: #cfe0ef; font-family: "Cascadia Code", Consolas, monospace; font-size: 9px; text-align: left; border: 1px solid #2a3644; border-radius: 7px; background: #080d12; }
+    .boot .btn { margin-top: 14px; }
+
+    .toast {
+      position: fixed;
+      z-index: 120;
+      bottom: 22px;
+      left: 50%;
+      max-width: min(520px, calc(100vw - 28px));
+      padding: 8px 11px;
+      color: #d8e2ee;
+      font-size: 10px;
+      line-height: 1.4;
+      pointer-events: none;
+      opacity: 0;
+      border: 1px solid #2c3847;
+      border-radius: 8px;
+      background: rgba(22, 30, 40, .96);
+      box-shadow: 0 16px 48px -14px #000;
+      transform: translate(-50%, 10px);
+      transition: opacity .18s ease, transform .18s ease;
+      backdrop-filter: blur(12px);
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 1320px) {
+      .app { padding: 15px 16px 16px; gap: 14px; }
+      .workspace { grid-template-columns: minmax(0, 1fr) 358px; gap: 14px; }
+      .brand { min-width: 215px; }
+      .topbar { gap: 16px; }
+      .top-stats { gap: 13px; }
+      .filter-btn { max-width: 190px; }
+    }
+
+    @media (max-width: 1120px) {
+      .top-stats .stat.optional, .top-stats .stat-sep.optional { display: none; }
+      .workspace { grid-template-columns: minmax(0, 1fr) 330px; }
+      .cal-head { padding: 17px 18px 13px; }
+      .cal-filterbar { padding-left: 14px; padding-right: 12px; }
+      .filter-btn { max-width: 160px; }
+      .scope-switch button { padding: 0 6px; }
+      .day-cell { padding: 7px 8px 6px; }
+      .detail-panel .detail-head { padding-left: 16px; padding-right: 16px; }
+    }
+
+    @media (max-width: 1000px) {
+      body { height: auto; overflow: auto; }
+      .app { height: auto; min-height: 100dvh; padding: 14px; }
+      .workspace { grid-template-columns: 1fr; }
+      .calendar-panel { min-height: 650px; }
+      .detail-panel { min-height: 660px; }
+      .update-list { max-height: 520px; }
+      .top-stats { margin-left: auto; }
+      .top-stats .stat.optional, .top-stats .stat-sep.optional { display: flex; }
+    }
+
+    @media (max-width: 700px) {
+      .app { padding: 10px; gap: 10px; }
+      .topbar { gap: 9px; }
+      .brand { min-width: 0; }
+      .brand-mark { width: 34px; height: 34px; border-radius: 9px; }
+      .brand-mark svg { width: 21px; height: 21px; }
+      .brand-title { font-size: 15px; }
+      .brand-sub { font-size: 6.5px; letter-spacing: .1em; }
+      .top-stats { display: none; }
+      .top-actions { gap: 5px; margin-left: auto; }
+      .btn { height: 32px; padding: 0 9px; font-size: 9.5px; }
+      .btn .btn-label { display: none; }
+      .source-badge { display: none; }
+      .calendar-panel { min-height: 545px; border-radius: 13px; }
+      .cal-head { flex-wrap: wrap; align-items: center; gap: 9px; padding: 13px 13px 11px; }
+      .month-title { gap: 6px; margin-top: 5px; }
+      #monthLabel { font-size: 25px; }
+      #yearLabel { padding: 3px 5px; font-size: 8.5px; }
+      .eyebrow { gap: 5px; font-size: 7.5px; letter-spacing: .11em; }
+      .eyebrow-line { width: 10px; }
+      .cal-tools { gap: 5px; margin-left: auto; }
+      .view-switch { padding: 1px; }
+      .view-switch button { height: 23px; padding: 0 6px; font-size: 8.5px; }
+      .cal-nav { padding: 1px; }
+      .nav-btn { width: 24px; height: 23px; }
+      .nav-today { height: 23px; padding: 0 5px; font-size: 8.5px; }
+      .cal-filterbar { align-items: flex-start; padding: 7px 10px; gap: 7px; flex-wrap: wrap; }
+      .filter-left { width: 100%; gap: 6px; }
+      .filter-btn { max-width: none; flex: 1; }
+      .scope-switch { flex: none; }
+      .sync-status { margin-left: 2px; }
+      .weekdays span { height: 26px; padding-left: 5px; font-size: 8px; }
+      .weekdays small { display: none; }
+      .day-cell { padding: 4px; }
+      .day-top { min-height: 20px; }
+      .day-num { width: 20px; height: 20px; font-size: 11px; }
+      .day-count { gap: 2px; padding: 1px 3px; font-size: 6.5px; border: 1px solid rgba(85, 224, 163, .18); background: rgba(85, 224, 163, .06); }
+      .day-count::before { width: 2px; height: 2px; }
+      .day-empty { display: none; }
+      .day-events { flex-direction: row; gap: 3px; padding-top: 2px; }
+      .event { width: 5px; height: 5px; flex: none; gap: 0; padding: 0; font-size: 0; border-radius: 50%; background: var(--c); }
+      .event i { display: none; }
+      .event span { display: none; }
+      .cal-foot { gap: 6px; padding: 8px 11px; font-size: 7.5px; }
+      .legend { gap: 9px; }
+      .legend-official { display: none; }
+      .foot-hint { display: none; }
+      .matrix-view { padding: 7px 7px 0; }
+      .detail-panel { min-height: 620px; border-radius: 13px; }
+      .update-list { max-height: 480px; }
+      .detail-head { padding: 14px 14px 0; }
+      .detail-title-row h2 { font-size: 21px; }
+      .day-summary { margin: 10px 12px 8px; padding: 10px; }
+      .summary-num { font-size: 29px; }
+      .detail-foot { padding: 8px 12px; }
+      .popover { left: 10px !important; right: 10px; bottom: 10px; top: auto !important; width: auto; max-height: 70vh; }
+      .filter-list { max-height: 46vh; }
+      .modal { padding: 10px; }
+      .modal-panel { max-height: 92vh; }
+      .modal-head { padding: 16px 16px 12px; }
+      .modal-head h2 { font-size: 19px; }
+      .modal-body { padding: 10px 12px; }
+      .source-summary { gap: 5px; }
+      .source-summary-card { padding: 7px 8px; }
+      .source-summary-card strong { font-size: 16px; }
+      .source-row { padding: 8px 3px; }
+      .source-side { align-items: flex-end; }
+      .modal-foot { padding: 9px 12px; }
+      .modal-foot span { display: none; }
+      .toast { bottom: 14px; }
+    }
+
+    @media (max-width: 380px) {
+      .brand-sub { display: none; }
+      .cal-tools { width: 100%; }
+      .view-switch { margin-right: auto; }
+      .filter-left { flex-wrap: wrap; }
+      .filter-btn { flex: 1 1 100%; }
+      .scope-switch { margin-left: auto; }
+      .day-count { gap: 0; padding: 1px 2px; font-size: 6px; }
+      .day-count::before { display: none; }
+    }
+
+    @media (max-height: 780px) and (min-width: 1001px) {
+      .app { gap: 12px; padding: 12px 18px 14px; }
+      .cal-head { padding: 14px 18px 11px; }
+      .cal-filterbar { min-height: 41px; padding-top: 5px; padding-bottom: 5px; }
+      .day-cell { padding: 6px 8px; }
+      .cal-foot { padding: 7px 14px; }
+      .detail-head { padding-top: 14px; }
+      .day-summary { margin-top: 9px; margin-bottom: 8px; padding: 9px 11px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .001ms !important;
+        animation-delay: 0ms !important;
+        transition-duration: .001ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 28 28" fill="none">
+            <rect x="3.2" y="4.6" width="21.6" height="19.4" rx="4.2" stroke="currentColor" stroke-width="1.7"/>
+            <path d="M3.6 10.4h20.8M9.2 3.2v3.6M18.8 3.2v3.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            <path d="m9.4 17.1 2.9 2.7 6-6.1" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div class="brand-copy">
+          <h1 class="brand-title">游戏更新日历</h1>
+          <span class="brand-sub">PATCH UPDATE TRACKER <i></i> <span id="brandCount">22 GAMES</span></span>
+        </div>
+      </div>
+
+      <div class="top-stats" aria-label="当月统计">
+        <div class="stat"><span class="stat-num" id="statEvents">—</span><span class="stat-label">当月更新</span></div>
+        <span class="stat-sep" aria-hidden="true"></span>
+        <div class="stat"><span class="stat-num" id="statDays">—</span><span class="stat-label">更新日</span></div>
+        <span class="stat-sep optional" aria-hidden="true"></span>
+        <div class="stat optional"><span class="stat-num" id="statReleases">—</span><span class="stat-label">当月新游</span></div>
+        <span class="stat-sep optional" aria-hidden="true"></span>
+        <div class="stat optional"><span class="stat-num" id="statCoverage">—</span><span class="stat-label">游戏覆盖</span></div>
+      </div>
+
+      <div class="top-actions">
+        <button class="btn" id="refreshBtn" type="button" title="重新同步官方源">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 11a8.1 8.1 0 0 0-14.9-4M4 4v5h5M4 13a8.1 8.1 0 0 0 14.9 4M20 20v-5h-5"/>
+          </svg>
+          <span class="btn-label">刷新</span>
+        </button>
+        <button class="btn" id="sourcesBtn" type="button" title="查看官方数据源状态">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <ellipse cx="12" cy="5" rx="7" ry="3"/>
+            <path d="M5 5v7c0 1.7 3.1 3 7 3s7-1.3 7-3V5M5 12v7c0 1.7 3.1 3 7 3s7-1.3 7-3v-7"/>
+          </svg>
+          <span class="btn-label">数据源</span>
+          <span class="source-badge" id="sourceBadge">—</span>
+        </button>
+        <button class="btn primary" id="todayBtn" type="button" title="回到今天">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="2.5"/>
+            <path d="M8 3v4M16 3v4M3 10h18M8 14h2M14 14h2M8 18h2"/>
+          </svg>
+          <span class="btn-label">今天</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="panel calendar-panel" aria-label="官方更新月历">
+        <div class="cal-head">
+          <div class="cal-title">
+            <div class="eyebrow">
+              <span class="eyebrow-line" aria-hidden="true"></span>
+              <span id="monthEn">NOVEMBER</span>&nbsp;·&nbsp;OFFICIAL PATCH LOG
+            </div>
+            <div class="month-title">
+              <span id="monthLabel">11月</span>
+              <span id="yearLabel">2026</span>
+            </div>
+          </div>
+
+          <div class="cal-tools">
+            <div class="view-switch" role="group" aria-label="视图切换">
+              <button type="button" id="viewMonthBtn" class="active" aria-pressed="true">月历</button>
+              <button type="button" id="viewMatrixBtn" aria-pressed="false">矩阵</button>
+            </div>
+            <div class="cal-nav">
+              <button type="button" class="nav-btn" id="prevMonth" aria-label="上个月" title="上个月">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+              </button>
+              <button type="button" class="nav-today" id="calToday" title="回到今天">今天</button>
+              <button type="button" class="nav-btn" id="nextMonth" aria-label="下个月" title="下个月">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cal-filterbar">
+          <div class="filter-left">
+            <button class="filter-btn" id="gameFilterBtn" type="button" aria-expanded="false" aria-controls="gamePopover">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 6h16M7 12h10M10 18h4"/>
+              </svg>
+              <span class="filter-label" id="gameFilterLabel">全部游戏</span>
+              <span class="filter-count" id="gameFilterCount">0</span>
+              <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+
+            <div class="scope-switch" role="group" aria-label="更新范围">
+              <button type="button" data-scope="relevant" class="active" aria-pressed="true">更新 / 活动</button>
+              <button type="button" data-scope="all" aria-pressed="false">全部官方</button>
+            </div>
+          </div>
+          <div class="sync-status" id="syncStatus" aria-live="polite">
+            <span class="sync-dot"></span><span>等待同步</span>
+          </div>
+        </div>
+
+        <div class="month-view" id="monthView">
+          <div class="weekdays" aria-hidden="true">
+            <span>周一<small>MON</small></span>
+            <span>周二<small>TUE</small></span>
+            <span>周三<small>WED</small></span>
+            <span>周四<small>THU</small></span>
+            <span>周五<small>FRI</small></span>
+            <span class="is-weekend">周六<small>SAT</small></span>
+            <span class="is-weekend">周日<small>SUN</small></span>
+          </div>
+          <div class="calendar-grid" id="calendarGrid" role="group" aria-label="游戏更新日历"></div>
+        </div>
+
+        <div class="matrix-view" id="matrixView" hidden>
+          <div class="matrix-scroll" id="matrixScroll">
+            <div class="matrix-grid" id="matrixGrid" role="group" aria-label="游戏更新矩阵"></div>
+          </div>
+        </div>
+
+        <div class="cal-foot">
+          <div class="legend" aria-label="图例">
+            <span><i class="legend-dot has" aria-hidden="true"></i>有更新</span>
+            <span><i class="legend-dot none" aria-hidden="true"></i>无更新</span>
+            <span><i class="legend-dot release" aria-hidden="true"></i>新游发售</span>
+            <span class="legend-official">数据来自已配置来源</span>
+          </div>
+          <span class="foot-hint">点击日期查看更新原文 · <kbd>T</kbd> 今天</span>
+        </div>
+      </section>
+
+      <aside class="panel detail-panel" aria-label="当日官方更新">
+        <div class="detail-head">
+          <div class="eyebrow"><span class="eyebrow-line" aria-hidden="true"></span>SELECTED DATE</div>
+          <div class="detail-title-row">
+            <h2 id="selectedDateLabel">11月2日</h2>
+            <span class="weekday" id="selectedWeekday">星期一</span>
+            <span class="today-badge" id="todayBadge"><i aria-hidden="true"></i>今天</span>
+          </div>
+        </div>
+
+        <div class="day-summary">
+          <div class="summary-left">
+            <span class="summary-num zero" id="dayCount">0</span>
+            <div class="summary-copy">
+              <span class="summary-label" id="dayStatusLabel">这一天暂无更新</span>
+              <span class="summary-sub" id="dayStatusSub">正在读取官方源</span>
+            </div>
+          </div>
+          <span class="status-pill none" id="dayStatusPill">无更新</span>
+        </div>
+
+        <div class="update-list" id="updateList"></div>
+        <div class="detail-foot">
+          <span id="detailFoot">官方 / 社区来源 · 北京时间</span>
+          <span>自动归类</span>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div class="boot" id="boot">
+    <div class="boot-card">
+      <span class="boot-logo" aria-hidden="true">
+        <svg viewBox="0 0 28 28" fill="none">
+          <rect x="3.2" y="4.6" width="21.6" height="19.4" rx="4.2" stroke="currentColor" stroke-width="1.7"/>
+          <path d="M3.6 10.4h20.8M9.2 3.2v3.6M18.8 3.2v3.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          <path d="m9.4 17.1 2.9 2.7 6-6.1" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <div class="boot-spinner" id="bootSpinner"></div>
+      <h2 id="bootTitle">正在同步官方更新</h2>
+      <p id="bootText">正在从 Steam、Blizzard、Riot、NCSoft、腾讯等官方源获取最新公告。首次同步约需 30–90 秒。</p>
+      <div class="boot-meta" id="bootMeta"></div>
+      <pre id="bootCode" hidden><code>python server.py</code></pre>
+      <button class="btn primary" id="bootRetry" type="button" hidden>重新连接</button>
+    </div>
+  </div>
+
+  <div class="popover" id="gamePopover" hidden>
+    <div class="popover-head">
+      <strong>选择游戏</strong>
+      <button class="icon-btn" id="closeFilter" type="button" aria-label="关闭筛选">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="popover-search">
+      <label class="search-box" for="filterSearch">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>
+        <input id="filterSearch" type="text" placeholder="搜索游戏…" autocomplete="off" spellcheck="false">
+      </label>
+    </div>
+    <div class="filter-list" id="filterList"></div>
+  </div>
+
+  <div class="modal" id="sourceModal" hidden>
+    <div class="modal-backdrop" data-close-sources></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="sourceTitle">
+      <div class="modal-head">
+        <div class="eyebrow"><span class="eyebrow-line" aria-hidden="true"></span>OFFICIAL SOURCES</div>
+        <h2 id="sourceTitle">官方数据源</h2>
+        <p>这里列出每个游戏的官方更新来源和最近一次抓取结果。部分游戏没有公开 API，会在状态中明确标记。</p>
+        <button class="icon-btn modal-close" id="closeSources" type="button" aria-label="关闭数据源面板" data-close-sources>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="sourceBody"></div>
+      <div class="modal-foot">
+        <span>数据来自已配置来源；仅保存标题、日期与原文链接。</span>
+        <button class="btn primary" id="modalRefresh" type="button">重新同步</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const GAME_FALLBACK_COLOR = '#718095';
+      const MONTHS_EN = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+      const WEEKDAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      const KIND_LABELS = { patch: '版本更新', event: '活动 / 赛季', announcement: '官方公告', other: '社区 / 其他' };
+      const PROVIDER_LABELS = {
+        steam: 'Steam Web API',
+        blizzard: 'Blizzard News API',
+        riot_next: 'Riot 官方新闻',
+        tencent_lol: '腾讯官方公告',
+        warframe_html: 'Warframe 官方新闻',
+        nc_board: 'NCSoft 公告 API',
+        gamekee: 'GameKee 社区',
+        unsupported: '未公开接口'
+      };
+
+      const $ = (selector, root = document) => root.querySelector(selector);
+      const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+      const pad = (value) => String(value).padStart(2, '0');
+      const localToday = dateKey(new Date());
+
+      const state = {
+        data: null,
+        view: 'month',
+        scope: 'relevant',
+        selected: localToday,
+        today: localToday,
+        year: Number(localToday.slice(0, 4)),
+        month: Number(localToday.slice(5, 7)) - 1,
+        gameFilter: null,
+        filterQuery: '',
+        apiError: null,
+        fetching: false,
+        syncing: false,
+        booted: false,
+        lastLoad: 0,
+        req: 0,
+        pollTimer: null,
+        toastTimer: null,
+        matrixFocus: { date: localToday, game: null },
+        gameMap: new Map(),
+        groupMap: new Map(),
+        eventsByDate: new Map(),
+        releasesByDate: new Map(),
+        monthReleases: [],
+        visibleEvents: [],
+        scopeEvents: [],
+        monthEvents: []
+      };
+
+      const dom = {
+        statEvents: $('#statEvents'),
+        statDays: $('#statDays'),
+        statReleases: $('#statReleases'),
+        statCoverage: $('#statCoverage'),
+        monthEn: $('#monthEn'),
+        monthLabel: $('#monthLabel'),
+        yearLabel: $('#yearLabel'),
+        calendarGrid: $('#calendarGrid'),
+        monthView: $('#monthView'),
+        matrixView: $('#matrixView'),
+        matrixGrid: $('#matrixGrid'),
+        matrixScroll: $('#matrixScroll'),
+        viewMonthBtn: $('#viewMonthBtn'),
+        viewMatrixBtn: $('#viewMatrixBtn'),
+        gameFilterBtn: $('#gameFilterBtn'),
+        gameFilterLabel: $('#gameFilterLabel'),
+        gameFilterCount: $('#gameFilterCount'),
+        gamePopover: $('#gamePopover'),
+        filterSearch: $('#filterSearch'),
+        filterList: $('#filterList'),
+        selectedDateLabel: $('#selectedDateLabel'),
+        selectedWeekday: $('#selectedWeekday'),
+        todayBadge: $('#todayBadge'),
+        dayCount: $('#dayCount'),
+        dayStatusLabel: $('#dayStatusLabel'),
+        dayStatusSub: $('#dayStatusSub'),
+        dayStatusPill: $('#dayStatusPill'),
+        updateList: $('#updateList'),
+        detailFoot: $('#detailFoot'),
+        syncStatus: $('#syncStatus'),
+        refreshBtn: $('#refreshBtn'),
+        sourceBadge: $('#sourceBadge'),
+        sourceModal: $('#sourceModal'),
+        sourceBody: $('#sourceBody'),
+        modalRefresh: $('#modalRefresh'),
+        boot: $('#boot'),
+        bootSpinner: $('#bootSpinner'),
+        bootTitle: $('#bootTitle'),
+        bootText: $('#bootText'),
+        bootMeta: $('#bootMeta'),
+        bootCode: $('#bootCode'),
+        bootRetry: $('#bootRetry'),
+        toast: $('#toast')
+      };
+
+      function dateKey(date) {
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+      }
+
+      function dateFromKey(key) {
+        const parts = String(key).split('-').map(Number);
+        return new Date(parts[0], parts[1] - 1, parts[2]);
+      }
+
+      function monthPrefix(year = state.year, month = state.month) {
+        return `${year}-${pad(month + 1)}`;
+      }
+
+      function daysInMonth(year, month) {
+        return new Date(year, month + 1, 0).getDate();
+      }
+
+      function weeksInMonth(year, month) {
+        const first = new Date(year, month, 1);
+        const offset = (first.getDay() + 6) % 7;
+        return Math.ceil((offset + daysInMonth(year, month)) / 7);
+      }
+
+      function monthDates(year, month) {
+        const first = new Date(year, month, 1);
+        const offset = (first.getDay() + 6) % 7;
+        const start = new Date(year, month, 1 - offset);
+        return Array.from({ length: weeksInMonth(year, month) * 7 }, (_, index) => (
+          new Date(start.getFullYear(), start.getMonth(), start.getDate() + index)
+        ));
+      }
+
+      function formatDateCN(key) {
+        const date = dateFromKey(key);
+        return `${date.getMonth() + 1}月${date.getDate()}日`;
+      }
+
+      function formatSync(iso) {
+        if (!iso) return '尚未同步';
+        const date = new Date(iso);
+        if (Number.isNaN(date.getTime())) return '尚未同步';
+        const now = new Date();
+        const sameDay = date.getFullYear() === now.getFullYear()
+          && date.getMonth() === now.getMonth()
+          && date.getDate() === now.getDate();
+        const time = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        return sameDay ? time : `${date.getMonth() + 1}/${date.getDate()} ${time}`;
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[character]));
+      }
+
+      function formatNumber(value) {
+        const number = Number(value);
+        if (!Number.isFinite(number)) return '—';
+        return String(Math.round(number)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      }
+
+      function safeColor(value) {
+        return /^#[0-9a-f]{6}$/i.test(String(value || '')) ? value : GAME_FALLBACK_COLOR;
+      }
+
+      function safeUrl(value, fallback = '') {
+        try {
+          const url = new URL(String(value || fallback));
+          return ['http:', 'https:'].includes(url.protocol) ? escapeHtml(url.href) : '';
+        } catch (error) {
+          return '';
+        }
+      }
+
+      function kindLabel(kind) {
+        return KIND_LABELS[kind] || KIND_LABELS.announcement;
+      }
+
+      function kindClass(kind) {
+        return ['patch', 'event', 'announcement', 'other'].includes(kind) ? kind : 'announcement';
+      }
+
+      function sourceHealth(gameId) {
+        if (!state.data) return 'off';
+        const sources = state.data.sources.filter((source) => source.gameId === gameId);
+        if (sources.some((source) => source.ok)) return 'ok';
+        if (sources.some((source) => source.status === 'error')) return 'warn';
+        return 'off';
+      }
+
+      function scopeMatches(event) {
+        return state.scope === 'all' || event.kind === 'patch' || event.kind === 'event';
+      }
+
+      function buildDataIndex() {
+        const data = state.data;
+        state.gameMap = new Map((data?.games || []).map((game) => [game.id, game]));
+        state.groupMap = new Map((data?.groups || []).map((group) => [group.id, group]));
+
+        const scopeEvents = (data?.events || []).filter(scopeMatches);
+        state.scopeEvents = scopeEvents;
+        const visibleEvents = scopeEvents.filter((event) => !state.gameFilter || event.gameId === state.gameFilter);
+        state.visibleEvents = visibleEvents;
+
+        const byDate = new Map();
+        visibleEvents.forEach((event) => {
+          if (!byDate.has(event.date)) byDate.set(event.date, []);
+          byDate.get(event.date).push(event);
+        });
+        byDate.forEach((events) => events.sort((a, b) => String(b.publishedAt).localeCompare(String(a.publishedAt))));
+        state.eventsByDate = byDate;
+        state.monthEvents = visibleEvents.filter((event) => event.date.startsWith(monthPrefix()));
+
+        // Upcoming releases belong to no tracked game, so they step aside
+        // whenever a single game is being filtered.
+        const releases = state.gameFilter ? [] : (data?.releases || []);
+        const releasesByDate = new Map();
+        releases.forEach((release) => {
+          if (!releasesByDate.has(release.date)) releasesByDate.set(release.date, []);
+          releasesByDate.get(release.date).push(release);
+        });
+        state.releasesByDate = releasesByDate;
+        state.monthReleases = releases.filter((release) => release.date.startsWith(monthPrefix()));
+      }
+
+      function setMonthToKey(key) {
+        const date = dateFromKey(key);
+        state.year = date.getFullYear();
+        state.month = date.getMonth();
+      }
+
+      function renderAll(animate = false) {
+        if (!state.data) return;
+        buildDataIndex();
+        renderHeading();
+        renderStats();
+        renderFilterButton();
+        renderSync();
+        if (state.view === 'matrix') renderMatrix();
+        else renderCalendar(animate);
+        renderDetail();
+        if (!dom.sourceModal.hidden) renderSources();
+        if (!dom.gamePopover.hidden) renderFilterList();
+      }
+
+      function renderHeading() {
+        dom.monthLabel.textContent = `${state.month + 1}月`;
+        dom.yearLabel.textContent = String(state.year);
+        dom.monthEn.textContent = MONTHS_EN[state.month];
+        dom.calendarGrid.setAttribute('aria-label', `${state.year}年${state.month + 1}月 官方游戏更新日历`);
+        dom.matrixGrid.setAttribute('aria-label', `${state.year}年${state.month + 1}月 游戏更新矩阵`);
+        document.title = `${state.year}年${state.month + 1}月 · 游戏更新日历`;
+        dom.viewMonthBtn.classList.toggle('active', state.view === 'month');
+        dom.viewMatrixBtn.classList.toggle('active', state.view === 'matrix');
+        dom.viewMonthBtn.setAttribute('aria-pressed', String(state.view === 'month'));
+        dom.viewMatrixBtn.setAttribute('aria-pressed', String(state.view === 'matrix'));
+        $$('.scope-switch button').forEach((button) => {
+          const active = button.dataset.scope === state.scope;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-pressed', String(active));
+        });
+      }
+
+      function renderStats() {
+        const data = state.data;
+        const days = new Set(state.monthEvents.map((event) => event.date)).size;
+        dom.statEvents.textContent = String(state.monthEvents.length);
+        dom.statDays.textContent = String(days);
+        if (dom.statReleases) {
+          dom.statReleases.textContent = String(state.monthReleases.length);
+          const newCount = state.monthReleases.filter((item) => item.isNew).length;
+          dom.statReleases.title = newCount
+            ? `本月 ${state.monthReleases.length} 款新游，其中 ${newCount} 款今天首次上榜`
+            : `本月 ${state.monthReleases.length} 款即将发售的游戏`;
+        }
+        dom.statCoverage.textContent = `${data.stats.gamesCovered}/${data.stats.gamesTotal}`;
+        dom.sourceBadge.textContent = `${data.stats.sourceOk}/${data.stats.sourceTotal}`;
+        dom.sourceBadge.classList.toggle('warn', data.stats.sourceOk < data.stats.sourceActive);
+        dom.sourceBadge.title = `${data.stats.sourceOk} / ${data.stats.sourceTotal} 个官方源正常`;
+      }
+
+      function renderFilterButton() {
+        const game = state.gameFilter ? state.gameMap.get(state.gameFilter) : null;
+        dom.gameFilterLabel.textContent = game ? (game.id.startsWith('aion2-') ? game.short : game.name) : '全部游戏';
+        dom.gameFilterCount.textContent = String(state.monthEvents.length);
+        dom.gameFilterBtn.classList.toggle('active', Boolean(state.gameFilter));
+        dom.gameFilterBtn.title = game ? `只看 ${game.name}${game.sub ? ` · ${game.sub}` : ''}` : '筛选游戏';
+      }
+
+      function renderSync() {
+        const data = state.data;
+        const failed = data ? data.sources.filter((source) => source.status === 'error').length : 0;
+        let dot = 'ok';
+        let text = '等待同步';
+        if (state.apiError) {
+          dot = 'error';
+          text = '服务连接异常';
+        } else if (data?.staticSnapshot) {
+          text = data.generatedAt ? `静态快照 · ${formatSync(data.generatedAt)}` : '静态快照';
+        } else if (data?.refreshing) {
+          dot = 'spin';
+          text = data.generatedAt ? '正在更新官方源…' : '首次同步官方源…';
+        } else if (data?.generatedAt) {
+          text = `同步于 ${formatSync(data.generatedAt)}`;
+        }
+        dom.syncStatus.innerHTML = `
+          <span class="sync-dot ${dot}" aria-hidden="true"></span>
+          <span>${escapeHtml(text)}</span>
+          ${failed ? `<span class="sync-warn">· ${failed} 源异常</span>` : ''}
+        `;
+        const busy = Boolean(state.syncing || data?.refreshing || data?.staticSnapshot);
+        dom.refreshBtn.classList.toggle('loading', busy);
+        dom.refreshBtn.disabled = busy;
+        dom.refreshBtn.title = data?.staticSnapshot
+          ? '静态快照页面，刷新请运行本地服务'
+          : (busy ? '正在同步…' : '重新同步官方源');
+      }
+
+      function renderCalendar(animate = false) {
+        const dates = monthDates(state.year, state.month);
+        const fragment = document.createDocumentFragment();
+        dom.calendarGrid.style.gridTemplateRows = `repeat(${dates.length / 7}, minmax(0, 1fr))`;
+
+        dates.forEach((date, index) => {
+          const key = dateKey(date);
+          const inMonth = date.getMonth() === state.month;
+          const events = inMonth ? (state.eventsByDate.get(key) || []) : [];
+          const releases = inMonth ? (state.releasesByDate.get(key) || []) : [];
+          const isToday = key === state.today;
+          const isSelected = key === state.selected;
+          const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+          const classNames = ['day-cell'];
+          if (!inMonth) classNames.push('is-other');
+          if (isWeekend) classNames.push('is-weekend');
+          if (isToday) classNames.push('is-today');
+          if (isSelected) classNames.push('is-selected');
+
+          const cell = document.createElement('button');
+          cell.type = 'button';
+          cell.className = classNames.join(' ');
+          cell.dataset.date = key;
+          cell.style.setProperty('--i', index);
+          cell.tabIndex = isSelected ? 0 : -1;
+          cell.setAttribute('aria-pressed', String(isSelected));
+          if (isToday) cell.setAttribute('aria-current', 'date');
+
+          const labels = events.slice(0, 4).map((event) => event.title);
+          const releaseLabels = releases.slice(0, 4).map((item) => item.name);
+          const summary = [
+            releases.length ? `${releases.length} 款新游发售：${releaseLabels.join('；')}` : '',
+            events.length ? `${events.length} 条官方更新：${labels.join('；')}` : ''
+          ].filter(Boolean).join('。');
+          cell.setAttribute(
+            'aria-label',
+            `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日，`
+              + (summary || '无官方更新')
+          );
+          cell.title = (releases.length || events.length)
+            ? [
+              formatDateCN(key),
+              ...releases.slice(0, 4).map((item) => `★ ${item.name}`),
+              ...events.slice(0, 6).map((event) => `• ${event.title}`)
+            ].join('\n')
+            : `${formatDateCN(key)} · 无更新`;
+
+          const releaseChips = releases.slice(0, 2).map((item) => (
+            `<span class="event is-release${item.isNew ? ' new' : ''}" title="${escapeHtml(item.name)} · 新游发售"><i></i><span>${escapeHtml(item.name)}</span></span>`
+          ));
+          const eventChips = events.slice(0, 2).map((event) => {
+            const game = state.gameMap.get(event.gameId);
+            return `<span class="event" style="--c:${safeColor(game?.color)}" title="${escapeHtml(event.title)}"><i></i><span>${escapeHtml(event.title)}</span></span>`;
+          });
+          // Releases lead the cell; the whole stack stays within three chips.
+          const chips = releaseChips.concat(eventChips).slice(0, 3).join('');
+
+          let flag = '';
+          if (inMonth) {
+            const releaseFlag = releases.length
+              ? `<span class="day-count rel" title="${releases.length} 款新游发售">新${releases.length}</span>`
+              : '';
+            const eventFlag = events.length
+              ? `<span class="day-count" title="${events.length} 条官方更新">${events.length}</span>`
+              : '';
+            flag = (releaseFlag || eventFlag)
+              ? `<span class="day-flags">${releaseFlag}${eventFlag}</span>`
+              : '<span class="day-empty">无更新</span>';
+          }
+
+          cell.innerHTML = `
+            <span class="day-top">
+              <span class="day-num">${date.getDate()}</span>
+              ${flag}
+            </span>
+            <span class="day-events">${chips}</span>
+          `;
+          fragment.appendChild(cell);
+        });
+
+        dom.calendarGrid.classList.toggle('animate', Boolean(animate));
+        dom.calendarGrid.replaceChildren(fragment);
+      }
+
+      function renderMatrix() {
+        const games = state.gameFilter
+          ? (state.gameMap.get(state.gameFilter) ? [state.gameMap.get(state.gameFilter)] : [])
+          : (state.data.games || []);
+        const totalDays = daysInMonth(state.year, state.month);
+        const prefix = monthPrefix();
+        const scrollTop = dom.matrixScroll.scrollTop;
+        const scrollLeft = dom.matrixScroll.scrollLeft;
+        dom.matrixGrid.style.gridTemplateColumns = `154px repeat(${totalDays}, minmax(25px, 1fr))`;
+        dom.matrixGrid.style.gridTemplateRows = `30px repeat(${Math.max(1, games.length)}, minmax(27px, 1fr))`;
+        dom.matrixGrid.style.minWidth = `${154 + totalDays * 27}px`;
+
+        if (!state.matrixFocus.game || !state.gameMap.has(state.matrixFocus.game)) {
+          state.matrixFocus.game = games[0]?.id || null;
+        }
+        if (!state.matrixFocus.date.startsWith(prefix)) state.matrixFocus.date = state.selected;
+
+        let html = '<div class="matrix-corner"><span>游戏 / 日期</span><small>GAME / DAY</small></div>';
+        for (let day = 1; day <= totalDays; day += 1) {
+          const key = `${prefix}-${pad(day)}`;
+          const date = new Date(state.year, state.month, day);
+          const classes = ['matrix-day'];
+          if (date.getDay() === 0 || date.getDay() === 6) classes.push('is-weekend');
+          if (key === state.today) classes.push('is-today');
+          if (key === state.selected) classes.push('is-selected');
+          html += `<button type="button" class="${classes.join(' ')}" data-date="${key}" title="${formatDateCN(key)} ${WEEKDAYS[date.getDay()]}">${day}</button>`;
+        }
+
+        games.forEach((game) => {
+          const color = safeColor(game.color);
+          const health = sourceHealth(game.id);
+          let monthCount = 0;
+          for (let day = 1; day <= totalDays; day += 1) {
+            if ((state.eventsByDate.get(`${prefix}-${pad(day)}`) || []).some((event) => event.gameId === game.id)) monthCount += 1;
+          }
+          html += `
+            <div class="matrix-game" data-game="${escapeHtml(game.id)}" style="--c:${color}" title="${escapeHtml(game.name)} · 当月 ${monthCount} 天有更新">
+              <span class="matrix-game-dot" aria-hidden="true"></span>
+              <span class="matrix-game-name">${escapeHtml(game.short)}</span>
+              <span class="matrix-count">${monthCount}</span>
+              ${health === 'off' ? '<span class="matrix-source">无源</span>' : ''}
+            </div>
+          `;
+          for (let day = 1; day <= totalDays; day += 1) {
+            const key = `${prefix}-${pad(day)}`;
+            const events = (state.eventsByDate.get(key) || []).filter((event) => event.gameId === game.id);
+            const on = events.length > 0;
+            const isFocus = state.matrixFocus.date === key && state.matrixFocus.game === game.id;
+            const classes = ['matrix-cell'];
+            if (on) classes.push('on');
+            if (events.length > 1) classes.push('multi');
+            if (key === state.today) classes.push('is-today');
+            if (key === state.selected) classes.push('is-selected');
+            const label = `${game.name}，${formatDateCN(key)}，${on ? `${events.length} 条官方更新` : '无更新'}`;
+            html += `<button type="button" class="${classes.join(' ')}" data-game="${escapeHtml(game.id)}" data-date="${key}" tabindex="${isFocus ? '0' : '-1'}" aria-pressed="${on}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}" style="--c:${color}">${events.length > 1 ? `<span>${events.length}</span>` : ''}</button>`;
+          }
+        });
+
+        dom.matrixGrid.innerHTML = html;
+        requestAnimationFrame(() => {
+          dom.matrixScroll.scrollTop = scrollTop;
+          dom.matrixScroll.scrollLeft = scrollLeft;
+        });
+      }
+
+      function renderDetail() {
+        const date = dateFromKey(state.selected);
+        const events = state.eventsByDate.get(state.selected) || [];
+        const releases = state.releasesByDate.get(state.selected) || [];
+        const games = new Set(events.map((event) => event.gameId));
+        const sources = new Set(events.map((event) => event.sourceId));
+        const count = events.length + releases.length;
+        const filteredGame = state.gameFilter ? state.gameMap.get(state.gameFilter) : null;
+        const noSource = Boolean(filteredGame && sourceHealth(filteredGame.id) === 'off');
+
+        dom.selectedDateLabel.textContent = `${date.getMonth() + 1}月${date.getDate()}日`;
+        dom.selectedWeekday.textContent = WEEKDAYS[date.getDay()];
+        dom.todayBadge.hidden = state.selected !== state.today;
+        dom.dayCount.textContent = String(count);
+        dom.dayCount.classList.toggle('zero', count === 0);
+        dom.dayStatusLabel.textContent = count
+          ? (releases.length && events.length
+            ? '条更新 / 新游'
+            : (releases.length ? '款新游发售' : '条官方更新'))
+          : '这一天暂无更新';
+        dom.dayStatusSub.textContent = count
+          ? [
+            games.size ? `${games.size} 款游戏` : '',
+            sources.size ? `${sources.size} 个官方源` : '',
+            releases.length ? `${releases.length} 款新游` : ''
+          ].filter(Boolean).join(' · ')
+          : (noSource ? '该游戏暂无公开官方接口' : (state.gameFilter ? '当前筛选下没有记录' : '已检查全部官方源'));
+        dom.dayStatusPill.textContent = count ? (events.length ? '有更新' : '新游') : '无更新';
+        dom.dayStatusPill.className = `status-pill ${count ? 'has' : 'none'}`;
+        dom.detailFoot.textContent = `近 18 个月 · 当月 ${state.monthEvents.length} 条 · ${state.monthReleases.length} 款新游 · 北京时间`;
+
+        if (!count) {
+          const reset = state.gameFilter ? '<button class="empty-reset" type="button" data-reset-filters>清除筛选</button>' : '';
+          dom.updateList.innerHTML = `
+            <div class="empty-day">
+              <span class="empty-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="16" rx="3"/>
+                  <path d="M8 3v4M16 3v4M3 10h18M9 15h6"/>
+                </svg>
+              </span>
+              <h3>${noSource ? '该游戏暂无公开接口' : (state.gameFilter ? '当前筛选下没有更新' : '这一天没有官方更新')}</h3>
+              <p>${noSource ? `${escapeHtml(filteredGame?.name || '该游戏')} 目前没有已接入的官方更新源。你仍可以打开数据源面板查看已配置的官方入口。` : (state.gameFilter ? '换一个日期，或清除游戏筛选查看全部游戏。' : '已读取所有已接入的官方源。可以打开“数据源”查看抓取状态。')}</p>
+              ${reset}
+            </div>
+          `;
+          return;
+        }
+
+        const releaseCards = releases.map((item) => {
+          const follows = typeof item.follows === 'number'
+            ? `<span><b>${formatNumber(item.follows)}</b> follows</span>`
+            : `<span class="hot">热门榜 #${item.rank || '—'}</span>`;
+          const gain = typeof item.gain7d === 'number' && item.gain7d > 0
+            ? `<span>7 天 <b>+${formatNumber(item.gain7d)}</b></span>`
+            : '';
+          const price = item.price ? `<span>${escapeHtml(item.price)}</span>` : '';
+          const url = safeUrl(item.url);
+          const newBadge = item.isNew ? '<span class="release-new">NEW</span>' : '';
+          const sourceLabel = item.source === 'steamdb' ? 'SteamDB' : 'Steam 热门';
+          return `
+            <article class="update-card is-release">
+              <div class="update-top">
+                <span class="game-pill">
+                  <span class="game-mono" aria-hidden="true">新</span>
+                  <span class="game-pill-name">新游发售</span>
+                </span>
+                <span class="kind-badge release">${escapeHtml(sourceLabel)}</span>
+                ${newBadge}
+              </div>
+              <h3>${escapeHtml(item.name)}</h3>
+              <p class="release-meta">${follows}${gain}${price}</p>
+              <div class="update-foot">
+                <span class="update-source">Steam 商店 · 发售日 ${escapeHtml(item.date.slice(5).replace('-', '/'))}</span>
+                ${url ? `<a class="update-link" href="${url}" target="_blank" rel="noopener noreferrer">Steam 商店 ↗</a>` : ''}
+              </div>
+            </article>
+          `;
+        }).join('');
+
+        const releaseBlock = releaseCards
+          ? `<div class="release-group-title">新游发售 · ${releases.length}</div>${releaseCards}`
+          : '';
+        const eventBlock = events.length
+          ? (releaseCards ? `<div class="release-group-title">官方更新 · ${events.length}</div>` : '')
+          : '';
+
+        dom.updateList.innerHTML = releaseBlock + eventBlock + events.map((event) => {
+          const game = state.gameMap.get(event.gameId) || { name: event.gameId, code: '?', color: GAME_FALLBACK_COLOR, sub: '' };
+          const color = safeColor(game.color);
+          const url = safeUrl(event.url, event.sourceHomepage);
+          const excerpt = event.excerpt ? `<p>${escapeHtml(event.excerpt)}</p>` : '';
+          const linkLabel = event.provider === 'gamekee' ? '社区原文 ↗' : '官方原文 ↗';
+          const link = url
+            ? `<a class="update-link" href="${url}" target="_blank" rel="noopener noreferrer">${linkLabel}</a>`
+            : '<span class="update-link">原文链接</span>';
+          return `
+            <article class="update-card" style="--c:${color}">
+              <div class="update-top">
+                <span class="game-pill">
+                  <span class="game-mono" aria-hidden="true">${escapeHtml(game.code)}</span>
+                  <span class="game-pill-name">${escapeHtml(game.name)}</span>
+                </span>
+                <span class="kind-badge ${kindClass(event.kind)}">${kindLabel(event.kind)}</span>
+                <time class="update-time">${escapeHtml(event.time || '')}</time>
+              </div>
+              <h3>${escapeHtml(event.title)}</h3>
+              ${excerpt}
+              <div class="update-foot">
+                <span class="update-source">${escapeHtml(event.sourceName)}${game.sub ? ` · ${escapeHtml(game.sub)}` : ''}</span>
+                ${link}
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      function filterMatches(game) {
+        const query = state.filterQuery.trim().toLowerCase();
+        if (!query) return true;
+        return `${game.name} ${game.sub} ${game.short} ${game.tag} ${game.code}`.toLowerCase().includes(query);
+      }
+
+      function renderFilterList() {
+        if (!state.data) return;
+        const scopeMonth = state.scopeEvents.filter((event) => event.date.startsWith(monthPrefix()));
+        const counts = new Map();
+        scopeMonth.forEach((event) => counts.set(event.gameId, (counts.get(event.gameId) || 0) + 1));
+
+        let html = `
+          <button type="button" class="filter-row all-row ${!state.gameFilter ? 'active' : ''}" data-game="">
+            <span class="filter-dot" style="--c:#d7ff5f"></span>
+            <span class="filter-name">全部游戏 <span class="filter-sub">${state.data.games.length} 款</span></span>
+            <span class="filter-health ok"></span>
+            <span class="filter-number">${scopeMonth.length}</span>
+            <svg class="filter-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.2 4.2L19 6.8"/></svg>
+          </button>
+        `;
+
+        (state.data.groups || []).forEach((group) => {
+          const games = state.data.games.filter((game) => game.group === group.id && filterMatches(game));
+          if (!games.length) return;
+          html += `<div class="filter-group-title">${escapeHtml(group.label)}</div>`;
+          games.forEach((game) => {
+            const active = state.gameFilter === game.id;
+            const health = sourceHealth(game.id);
+            html += `
+              <button type="button" class="filter-row ${active ? 'active' : ''}" data-game="${escapeHtml(game.id)}">
+                <span class="filter-dot" style="--c:${safeColor(game.color)}"></span>
+                <span class="filter-name">${escapeHtml(game.name)} <span class="filter-sub">${escapeHtml(game.sub)}</span></span>
+                <span class="filter-health ${health}"></span>
+                <span class="filter-number">${counts.get(game.id) || 0}</span>
+                <svg class="filter-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.2 4.2L19 6.8"/></svg>
+              </button>
+            `;
+          });
+        });
+
+        if (!state.data.games.some(filterMatches)) html += '<div class="filter-empty">没有找到匹配的游戏</div>';
+        dom.filterList.innerHTML = html;
+      }
+
+      function renderSources() {
+        if (!state.data) return;
+        const data = state.data;
+        const statuses = data.sources;
+        const release = data.releaseStatus || {};
+        const releaseStale = Boolean(release.stale);
+        const releaseOk = release.mode === 'steamdb' && !releaseStale;
+        const releaseFallback = release.mode === 'steam' && !releaseStale;
+        const releaseStatusClass = releaseOk ? 'ok' : (releaseFallback || releaseStale ? 'warn' : 'off');
+        const releaseStatusText = releaseStale
+          ? '缓存'
+          : (releaseOk ? '正常' : (releaseFallback ? '兜底' : (release.mode === 'idle' ? '未同步' : '失败')));
+        const releaseMeta = releaseOk
+          ? `${release.count || 0} 款 · follows ≥ ${formatNumber(release.followsMin)} · 最近成功 ${formatSync(release.fetchedAt)}`
+          : `${release.count || 0} 款 · 热门榜前 ${release.popularLimit} · 最近成功 ${formatSync(release.fetchedAt)}`;
+        let rows = `
+          <div class="source-row">
+            <span class="source-row-dot" style="--c:var(--release)" aria-hidden="true"></span>
+            <div class="source-main">
+              <div class="source-title"><strong>新游发售</strong><span>SteamDB upcoming · Steam 热门即将推出</span></div>
+              <div class="source-meta">${escapeHtml(releaseMeta)}</div>
+              ${release.steamdbError ? `<div class="source-error">SteamDB：${escapeHtml(release.steamdbError)}</div>` : ''}
+            </div>
+            <div class="source-side">
+              <span class="source-status ${releaseStatusClass}">${releaseStatusText}</span>
+              <a class="source-link" href="https://steamdb.info/upcoming/" target="_blank" rel="noopener noreferrer">SteamDB ↗</a>
+            </div>
+          </div>
+        `;
+        data.games.forEach((game) => {
+          statuses.filter((source) => source.gameId === game.id).forEach((source) => {
+            const color = safeColor(game.color);
+            const provider = PROVIDER_LABELS[source.provider] || source.provider;
+            const stale = source.status === 'error' && source.count > 0;
+            const statusClass = source.ok ? 'ok' : (stale ? 'warn' : (source.status === 'unsupported' ? 'off' : 'warn'));
+            const statusText = source.ok ? '正常' : (stale ? '缓存' : (source.status === 'unsupported' ? '未公开' : (source.status === 'pending' ? '同步中' : '失败')));
+            const last = source.lastSuccess ? `最近成功 ${formatSync(source.lastSuccess)}` : '尚未成功同步';
+            const homepage = safeUrl(source.homepage || source.url);
+            const sourceLinkLabel = source.provider === 'gamekee' ? '社区页面 ↗' : '官方页面 ↗';
+            rows += `
+              <div class="source-row">
+                <span class="source-row-dot" style="--c:${color}" aria-hidden="true"></span>
+                <div class="source-main">
+                  <div class="source-title"><strong>${escapeHtml(game.name)}</strong><span>${escapeHtml(source.name)}</span></div>
+                  <div class="source-meta">${escapeHtml(provider)} · ${source.count || 0} 条 · ${escapeHtml(last)}</div>
+                  ${source.error ? `<div class="source-error">${escapeHtml(source.error)}</div>` : ''}
+                </div>
+                <div class="source-side">
+                  <span class="source-status ${statusClass}">${statusText}</span>
+                  ${homepage ? `<a class="source-link" href="${homepage}" target="_blank" rel="noopener noreferrer">${sourceLinkLabel}</a>` : ''}
+                </div>
+              </div>
+            `;
+          });
+        });
+        const staleCount = statuses.filter((source) => source.status === 'error' && source.count > 0).length;
+        dom.sourceBody.innerHTML = `
+          <div class="source-summary">
+            <div class="source-summary-card"><strong>${data.stats.sourceOk}/${data.stats.sourceActive}</strong><span>自动源正常</span></div>
+            <div class="source-summary-card"><strong>${data.stats.gamesCovered}/${data.stats.gamesTotal}</strong><span>游戏覆盖</span></div>
+            <div class="source-summary-card"><strong>${data.stats.sourceUnsupported}</strong><span>暂无公开接口</span></div>
+          </div>
+          <p class="source-note">
+            <strong>数据源说明：</strong>Steam 游戏使用 Valve 官方 Web API；暴雪使用官方新闻 API；Valorant 使用 Riot 官方新闻页；英雄联盟使用腾讯官方公告；Warframe 使用官方新闻页；永恒之塔 2 使用 NCSoft 官方公告 API；NIKKE 使用 GameKee 社区公告（非官方 API，按需求接入）；炉石传说数据源已按需求停用。
+            <strong>新游发售</strong>优先读取 SteamDB 的 upcoming 表（带 follows 数字，按 ${formatNumber(release.followsMin)} 过滤）；SteamDB 被 Cloudflare 拦截或封禁时，自动改用 Valve 官方的「热门即将推出」榜单，按排名取前 ${release.popularLimit} 款。
+            ${staleCount ? `当前有 ${staleCount} 个源请求失败，但保留了上次成功缓存。` : ''}
+          </p>
+          ${rows || '<div class="filter-empty">暂无数据源</div>'}
+        `;
+      }
+
+      function closeFilter() {
+        dom.gamePopover.hidden = true;
+        dom.gameFilterBtn.setAttribute('aria-expanded', 'false');
+      }
+
+      function positionFilter() {
+        if (window.innerWidth <= 700) {
+          dom.gamePopover.style.top = '';
+          dom.gamePopover.style.left = '';
+          return;
+        }
+        const rect = dom.gameFilterBtn.getBoundingClientRect();
+        const width = 330;
+        dom.gamePopover.style.left = `${Math.max(12, Math.min(rect.left, window.innerWidth - width - 12))}px`;
+        dom.gamePopover.style.top = `${rect.bottom + 7}px`;
+      }
+
+      function openFilter() {
+        if (!state.data) return;
+        dom.filterSearch.value = '';
+        state.filterQuery = '';
+        renderFilterList();
+        dom.gamePopover.hidden = false;
+        dom.gameFilterBtn.setAttribute('aria-expanded', 'true');
+        positionFilter();
+        requestAnimationFrame(() => dom.filterSearch.focus());
+      }
+
+      function openSources() {
+        dom.sourceModal.hidden = false;
+        renderSources();
+        document.body.classList.add('modal-open');
+        requestAnimationFrame(() => $('#closeSources')?.focus());
+      }
+
+      function closeSources() {
+        dom.sourceModal.hidden = true;
+        document.body.classList.remove('modal-open');
+      }
+
+      function showToast(message, duration = 2800) {
+        dom.toast.textContent = message;
+        dom.toast.classList.add('show');
+        clearTimeout(state.toastTimer);
+        state.toastTimer = setTimeout(() => dom.toast.classList.remove('show'), duration);
+      }
+
+      function hideBoot() {
+        if (!dom.boot || dom.boot.classList.contains('is-hidden')) return;
+        dom.boot.classList.add('is-hidden');
+        setTimeout(() => { dom.boot.hidden = true; }, 300);
+        state.booted = true;
+      }
+
+      function updateBootProgress(data) {
+        const stats = data.stats || {};
+        dom.bootSpinner.classList.remove('hidden');
+        dom.bootTitle.textContent = '正在同步官方更新';
+        dom.bootText.textContent = '正在从 Steam、Blizzard、Riot、NCSoft、腾讯等官方源获取最新公告。首次同步约需 30–90 秒。';
+        dom.bootMeta.textContent = `已获取 ${stats.sourceOk || 0} / ${stats.sourceActive || 0} 个自动源`;
+        dom.bootCode.hidden = true;
+        dom.bootRetry.hidden = true;
+      }
+
+      function showBootError(error) {
+        dom.boot.hidden = false;
+        dom.boot.classList.remove('is-hidden');
+        dom.bootSpinner.classList.add('hidden');
+        dom.bootTitle.textContent = '无法连接更新服务';
+        dom.bootText.textContent = location.protocol === 'file:'
+          ? '这是一个自动更新页面，需要通过本地服务运行。请在项目目录执行下面的命令，然后打开 http://127.0.0.1:8787。'
+          : '本地服务没有响应。请确认 server.py 正在运行，并刷新页面。';
+        dom.bootMeta.textContent = String(error?.message || error || '') === 'Failed to fetch'
+          ? '本地服务未响应'
+          : String(error?.message || error || '');
+        dom.bootCode.hidden = false;
+        dom.bootRetry.hidden = false;
+      }
+
+      function schedulePoll(delay = 1200) {
+        clearTimeout(state.pollTimer);
+        state.pollTimer = setTimeout(() => loadData({ quiet: true }), delay);
+      }
+
+      async function fetchSnapshot() {
+        try {
+          const response = await fetch('/api/updates', { cache: 'no-store' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return await response.json();
+        } catch (error) {
+          // 静态托管（GitHub Pages）没有后端，退回随页面发布的快照。
+          const fallback = await fetch('./data.json', { cache: 'no-store' });
+          if (!fallback.ok) throw error;
+          const data = await fallback.json();
+          data.staticSnapshot = true;
+          return data;
+        }
+      }
+
+      async function loadData(options = {}) {
+        if (state.fetching) return;
+        state.fetching = true;
+        const requestId = ++state.req;
+        try {
+          const data = await fetchSnapshot();
+          if (requestId !== state.req) return;
+          const first = !state.data;
+          state.data = data;
+          state.apiError = null;
+          state.lastLoad = Date.now();
+
+          if (first) {
+            state.today = data.today || localToday;
+            state.selected = state.today;
+            setMonthToKey(state.selected);
+            state.matrixFocus.date = state.selected;
+          }
+
+          if (!data.events.length && data.refreshing) {
+            updateBootProgress(data);
+            schedulePoll();
+            return;
+          }
+
+          if (!state.booted) hideBoot();
+          renderAll(first);
+          if (data.refreshing) schedulePoll();
+          else if (state.syncing) {
+            state.syncing = false;
+            renderSync();
+            showToast('官方源同步完成');
+          }
+        } catch (error) {
+          if (requestId !== state.req) return;
+          state.apiError = String(error.message || error);
+          if (state.syncing) state.syncing = false;
+          if (!state.data) showBootError(error);
+          else {
+            renderSync();
+            if (!options.quiet) showToast('更新服务连接失败，正在显示上次数据');
+          }
+          if (state.data?.refreshing) schedulePoll(2500);
+        } finally {
+          state.fetching = false;
+        }
+      }
+
+      async function refreshNow() {
+        if (state.syncing || state.data?.refreshing) return;
+        state.syncing = true;
+        renderSync();
+        try {
+          const response = await fetch('/api/refresh', { method: 'POST' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          showToast('已开始同步官方源…');
+          schedulePoll(700);
+        } catch (error) {
+          state.syncing = false;
+          renderSync();
+          showToast('无法触发同步，请检查本地服务');
+        }
+      }
+
+      function setView(view) {
+        if (view !== 'month' && view !== 'matrix') return;
+        state.view = view;
+        try { localStorage.setItem('patch-calendar:view2', view); } catch (error) { /* optional */ }
+        dom.monthView.hidden = view !== 'month';
+        dom.matrixView.hidden = view !== 'matrix';
+        dom.viewMonthBtn.classList.toggle('active', view === 'month');
+        dom.viewMatrixBtn.classList.toggle('active', view === 'matrix');
+        dom.viewMonthBtn.setAttribute('aria-pressed', String(view === 'month'));
+        dom.viewMatrixBtn.setAttribute('aria-pressed', String(view === 'matrix'));
+        if (!state.data) return;
+        if (view === 'matrix') {
+          state.matrixFocus.date = state.selected;
+          if (!state.matrixFocus.game) state.matrixFocus.game = state.data.games[0]?.id || null;
+          renderMatrix();
+        } else {
+          renderCalendar(false);
+        }
+      }
+
+      function selectDate(key, options = {}) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
+        const date = dateFromKey(key);
+        const monthChanged = date.getFullYear() !== state.year || date.getMonth() !== state.month;
+        state.selected = key;
+        if (monthChanged) {
+          state.year = date.getFullYear();
+          state.month = date.getMonth();
+          renderHeading();
+        }
+        state.matrixFocus.date = key;
+        renderAll(monthChanged);
+        if (options.focus) {
+          requestAnimationFrame(() => {
+            const selector = state.view === 'matrix'
+              ? `.matrix-cell[data-date="${key}"][data-game="${state.matrixFocus.game}"]`
+              : `.day-cell[data-date="${key}"]`;
+            const target = $(selector);
+            if (target) target.focus({ preventScroll: true });
+          });
+        }
+      }
+
+      function changeMonth(delta) {
+        const next = new Date(state.year, state.month + delta, 1);
+        state.year = next.getFullYear();
+        state.month = next.getMonth();
+        const now = dateFromKey(state.today);
+        const preferToday = state.year === now.getFullYear() && state.month === now.getMonth();
+        state.selected = dateKey(new Date(state.year, state.month, preferToday ? now.getDate() : 1));
+        state.matrixFocus.date = state.selected;
+        renderAll(true);
+      }
+
+      function goToday() {
+        if (!state.data) return;
+        state.today = state.data.today || localToday;
+        const date = dateFromKey(state.today);
+        state.selected = state.today;
+        state.year = date.getFullYear();
+        state.month = date.getMonth();
+        state.matrixFocus.date = state.selected;
+        renderAll(true);
+        if (state.view === 'month') {
+          requestAnimationFrame(() => $(`.day-cell[data-date="${state.selected}"]`)?.focus({ preventScroll: true }));
+        }
+      }
+
+      function setGameFilter(gameId) {
+        state.gameFilter = gameId || null;
+        state.matrixFocus.game = gameId || state.data?.games[0]?.id || null;
+        closeFilter();
+        renderAll(false);
+      }
+
+      function updateScope(scope) {
+        if (scope !== 'relevant' && scope !== 'all') return;
+        state.scope = scope;
+        try { localStorage.setItem('patch-calendar:scope2', scope); } catch (error) { /* optional */ }
+        renderAll(false);
+      }
+
+      function bindEvents() {
+        dom.viewMonthBtn.addEventListener('click', () => setView('month'));
+        dom.viewMatrixBtn.addEventListener('click', () => setView('matrix'));
+        $('#prevMonth').addEventListener('click', () => changeMonth(-1));
+        $('#nextMonth').addEventListener('click', () => changeMonth(1));
+        $('#calToday').addEventListener('click', goToday);
+        $('#todayBtn').addEventListener('click', goToday);
+
+        dom.calendarGrid.addEventListener('click', (event) => {
+          const cell = event.target.closest('.day-cell');
+          if (cell) selectDate(cell.dataset.date, { focus: true });
+        });
+
+        dom.calendarGrid.addEventListener('keydown', (event) => {
+          const cell = event.target.closest('.day-cell');
+          if (!cell) return;
+          const date = dateFromKey(cell.dataset.date);
+          let next = null;
+          switch (event.key) {
+            case 'ArrowLeft': next = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1); break;
+            case 'ArrowRight': next = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1); break;
+            case 'ArrowUp': next = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 7); break;
+            case 'ArrowDown': next = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 7); break;
+            case 'Home': {
+              const offset = (date.getDay() + 6) % 7;
+              next = new Date(date.getFullYear(), date.getMonth(), date.getDate() - offset);
+              break;
+            }
+            case 'End': {
+              const offset = (date.getDay() + 6) % 7;
+              next = new Date(date.getFullYear(), date.getMonth(), date.getDate() + (6 - offset));
+              break;
+            }
+            case 'PageUp':
+              event.preventDefault();
+              changeMonth(-1);
+              return;
+            case 'PageDown':
+              event.preventDefault();
+              changeMonth(1);
+              return;
+            default:
+              return;
+          }
+          event.preventDefault();
+          selectDate(dateKey(next), { focus: true });
+        });
+
+        dom.matrixGrid.addEventListener('click', (event) => {
+          const day = event.target.closest('.matrix-day');
+          if (day) {
+            selectDate(day.dataset.date);
+            return;
+          }
+          const cell = event.target.closest('.matrix-cell');
+          if (!cell) return;
+          state.matrixFocus = { date: cell.dataset.date, game: cell.dataset.game };
+          selectDate(cell.dataset.date);
+        });
+
+        dom.matrixGrid.addEventListener('focusin', (event) => {
+          const cell = event.target.closest('.matrix-cell');
+          if (!cell) return;
+          state.matrixFocus = { date: cell.dataset.date, game: cell.dataset.game };
+          $$('.matrix-cell[tabindex="0"]', dom.matrixGrid).forEach((item) => {
+            if (item !== cell) item.tabIndex = -1;
+          });
+          cell.tabIndex = 0;
+        });
+
+        dom.matrixGrid.addEventListener('keydown', (event) => {
+          const cell = event.target.closest('.matrix-cell');
+          if (!cell) return;
+          const date = dateFromKey(cell.dataset.date);
+          const games = state.gameFilter ? [state.gameMap.get(state.gameFilter)] : (state.data.games || []);
+          const gameIndex = games.findIndex((game) => game.id === cell.dataset.game);
+          let nextDate = date;
+          let nextGame = gameIndex;
+          if (event.key === 'ArrowLeft') nextDate = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
+          else if (event.key === 'ArrowRight') nextDate = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+          else if (event.key === 'ArrowUp') nextGame = Math.max(0, gameIndex - 1);
+          else if (event.key === 'ArrowDown') nextGame = Math.min(games.length - 1, gameIndex + 1);
+          else if (event.key === 'Home') nextDate = new Date(state.year, state.month, 1);
+          else if (event.key === 'End') nextDate = new Date(state.year, state.month, daysInMonth(state.year, state.month));
+          else return;
+          event.preventDefault();
+          const nextKey = dateKey(nextDate);
+          if (nextDate.getMonth() !== state.month || nextDate.getFullYear() !== state.year) {
+            selectDate(nextKey, { focus: true });
+            return;
+          }
+          const nextGameId = games[nextGame]?.id;
+          state.matrixFocus = { date: nextKey, game: nextGameId };
+          $$('.matrix-cell[tabindex="0"]', dom.matrixGrid).forEach((item) => { item.tabIndex = -1; });
+          const target = $(`.matrix-cell[data-date="${nextKey}"][data-game="${nextGameId}"]`, dom.matrixGrid);
+          if (target) {
+            target.tabIndex = 0;
+            target.focus({ preventScroll: false });
+          }
+        });
+
+        dom.gameFilterBtn.addEventListener('click', () => {
+          if (dom.gamePopover.hidden) openFilter();
+          else closeFilter();
+        });
+        $('#closeFilter').addEventListener('click', closeFilter);
+        dom.filterSearch.addEventListener('input', () => {
+          state.filterQuery = dom.filterSearch.value;
+          renderFilterList();
+        });
+        dom.filterSearch.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            closeFilter();
+            dom.gameFilterBtn.focus();
+          }
+        });
+        dom.filterList.addEventListener('click', (event) => {
+          const row = event.target.closest('.filter-row');
+          if (row) setGameFilter(row.dataset.game || null);
+        });
+
+        $$('.scope-switch button').forEach((button) => {
+          button.addEventListener('click', () => updateScope(button.dataset.scope));
+        });
+
+        dom.refreshBtn.addEventListener('click', refreshNow);
+        dom.modalRefresh.addEventListener('click', refreshNow);
+        $('#sourcesBtn').addEventListener('click', openSources);
+        $('#closeSources').addEventListener('click', closeSources);
+        $$('[data-close-sources]').forEach((element) => element.addEventListener('click', closeSources));
+
+        dom.updateList.addEventListener('click', (event) => {
+          if (event.target.closest('[data-reset-filters]')) {
+            state.gameFilter = null;
+            state.scope = 'relevant';
+            try { localStorage.setItem('patch-calendar:scope2', state.scope); } catch (error) { /* optional */ }
+            renderAll(false);
+          }
+        });
+
+        dom.bootRetry.addEventListener('click', () => {
+          dom.bootSpinner.classList.remove('hidden');
+          dom.bootCode.hidden = true;
+          dom.bootRetry.hidden = true;
+          dom.bootTitle.textContent = '正在连接更新服务';
+          dom.bootText.textContent = '请稍候，正在尝试读取本地服务…';
+          loadData();
+        });
+
+        document.addEventListener('click', (event) => {
+          if (dom.gamePopover.hidden) return;
+          if (dom.gamePopover.contains(event.target) || dom.gameFilterBtn.contains(event.target)) return;
+          closeFilter();
+        });
+        window.addEventListener('resize', () => { if (!dom.gamePopover.hidden) positionFilter(); });
+
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') {
+            if (!dom.sourceModal.hidden) { closeSources(); return; }
+            if (!dom.gamePopover.hidden) { closeFilter(); dom.gameFilterBtn.focus(); return; }
+          }
+          const target = event.target;
+          if (target && target.closest('input, textarea, select, [contenteditable="true"]')) return;
+          if (event.metaKey || event.ctrlKey || event.altKey) return;
+          if (event.key === 't' || event.key === 'T') {
+            event.preventDefault();
+            goToday();
+          } else if (event.key === '[') {
+            event.preventDefault();
+            changeMonth(-1);
+          } else if (event.key === ']') {
+            event.preventDefault();
+            changeMonth(1);
+          } else if (event.key === '1') {
+            setView('month');
+          } else if (event.key === '2') {
+            setView('matrix');
+          }
+        });
+
+        setInterval(() => {
+          if (!document.hidden && !state.data?.staticSnapshot) loadData({ quiet: true });
+        }, 5 * 60 * 1000);
+
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden || state.data?.staticSnapshot) return;
+          if (Date.now() - state.lastLoad > 120000) loadData({ quiet: true });
+        });
+      }
+
+      function init() {
+        try {
+          const savedView = localStorage.getItem('patch-calendar:view2');
+          const savedScope = localStorage.getItem('patch-calendar:scope2');
+          if (savedView === 'matrix' || savedView === 'month') state.view = savedView;
+          if (savedScope === 'all' || savedScope === 'relevant') state.scope = savedScope;
+        } catch (error) { /* optional */ }
+
+        dom.monthView.hidden = state.view !== 'month';
+        dom.matrixView.hidden = state.view !== 'matrix';
+        dom.viewMonthBtn.classList.toggle('active', state.view === 'month');
+        dom.viewMatrixBtn.classList.toggle('active', state.view === 'matrix');
+        dom.viewMonthBtn.setAttribute('aria-pressed', String(state.view === 'month'));
+        dom.viewMatrixBtn.setAttribute('aria-pressed', String(state.view === 'matrix'));
+        dom.selectedDateLabel.textContent = formatDateCN(state.selected);
+        dom.selectedWeekday.textContent = WEEKDAYS[dateFromKey(state.selected).getDay()];
+
+        bindEvents();
+        loadData();
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
