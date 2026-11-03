@@ -138,6 +138,16 @@ Steam 官方热门即将推出列表不给 follows 数字。旧逻辑曾把榜�
 - 新增 11 项测试（分类函数 6 项 + 过滤与状态 5 项），全套通过。
 - 分类未知（`unknown`）的条目**仍然保留**，只在面板计数提示 —— 避免 Steam 接口抽风时日历被清空。
 
+## 2026-11-03 20:15：发布在线实时版
+
+- GitHub Pages 只能托管静态文件，`data.json` 是构建那一刻的快照，无法实时。改为把 `server.py` 发布成在线 HTTP 服务：
+  **<https://game-update-calendar.apps.workbuddy.host/?sharecode=HN7QE6PC35>**
+- 该服务直接提供 `/api/updates`，页面走同源接口（不再读 `data.json`），每 30 分钟自动同步官方源，前端每 5 分钟静默刷新。
+- 实测：`/api/health` 返回 `refreshing: false`、`generatedAt` 为当前时间；`/api/updates` 返回 525 条更新 / 6 款联机新游，`stale: false`、`fetchedAt` 为当前时间。
+- 云端没有 Chrome，`fetch_steamdb` 会失败（`Chrome 调试端口未就绪`），因此 `mode = steam`；关注度由 `data/steamdb-follows.json` 覆盖层补齐（`followsSource = manual`），联机判定由 `data/steam-app-details.json` 提供（`playModeSource = cache`）。
+- `server.py` 现在读 `PORT` / `HOST` 环境变量：有 `PORT` 时默认绑 `0.0.0.0`，本地 `start.bat` 仍是 `127.0.0.1:8787`。
+- GitHub Pages 静态链接保留作备份，不再是主入口。
+
 ### 本地打开
 
 双击 `start.bat`，或：
