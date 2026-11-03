@@ -2258,6 +2258,27 @@
           const fallback = await fetch('./data.json', { cache: 'no-store' });
           if (!fallback.ok) throw error;
           const data = await fallback.json();
+          // Static snapshots can outlive the collector's filtering code.
+          // Enforce the follows threshold again in the browser so an older
+          // published data.json cannot re-show unverified or low-follow games.
+          const threshold = Number(data.releaseStatus?.followsMin ?? 5000);
+          const candidates = Array.isArray(data.releases) ? data.releases : [];
+          const visible = candidates.filter((item) => (
+            typeof item.follows === 'number' && item.follows > threshold
+          ));
+          const unknownCount = candidates.filter((item) => typeof item.follows !== 'number').length;
+          data.releases = visible;
+          data.releaseStatus = data.releaseStatus || {};
+          data.releaseStatus.count = visible.length;
+          data.releaseStatus.excludedUnknownFollows = Math.max(
+            Number(data.releaseStatus.excludedUnknownFollows || 0),
+            unknownCount
+          );
+          data.releaseStatus.excludedBelowThreshold = candidates.length - visible.length - unknownCount;
+          if (data.stats) {
+            data.stats.releaseTotal = visible.length;
+            data.stats.releaseNew = visible.filter((item) => item.isNew).length;
+          }
           data.staticSnapshot = true;
           return data;
         }
