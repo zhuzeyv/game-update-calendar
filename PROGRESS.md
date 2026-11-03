@@ -86,7 +86,14 @@ Steam 官方热门即将推出列表不给 follows 数字。旧逻辑曾把榜�
 - 当前缓存来自 Steam 官方候选列表，120 款都没有 follows；所以静态页面本次新游显示为 0 款是预期行为。SteamDB 抓取恢复、拿到真实 follows 后，达标游戏会显示。
 - 回归测试包含 `Mycelarium = 488`、5000 边界、5001 达标，以及官方列表未知 follows 的隐藏断言。
 
-## 如何继续
+## 2026-11-03 16:08：SteamDB 实测与线上残留修复
+
+- 此次通过网页抓取确认 `https://steamdb.info/upcoming/` 在当前抓取通道可打开，能看到 `Follows` 列以及真实关注数（例如 ArcheAge Chronicles 68,293、DREADMOOR 31,087）。之前本机出口 IP 被封，并不代表 SteamDB 全球都不可读。
+- Mycelarium 的 SteamDB App 页也可读：AppID `5181520`，页面显示 **488 followers**（页面记录更新时间 2026-11-03 07:06 UTC）；低于 5000，应隐藏。Upcoming 列表文本里没找到它，但 SteamDB app 页面确认数值。
+- 找到「还会显示」的直接原因：**线上 GitHub Pages 仍部署旧提交**。实际线上 `data.json` 有 60 条旧列表，Mycelarium 数据是 `follows: null, rank: 16, source: steam`，旧前端把未知关注度条目照样展示；之前修正只在本地，没有推上 GitHub。
+- 本地 `docs/index.html` 和 `index.html` 已加静态快照的客户端二次校验：真实 follows 必须是数值且 `>5000`；旧 JSON 也会被过滤。用真实下载的旧线上 JSON 做本地浏览器回归：42 格正常、0 个新游 chip、页面和详情都没有 Mycelarium、统计为 0、详情显示 120 款未知关注度候选隐藏；全套 Python 回归测试也通过。
+- **仍待发布**：尝试 GitHub connector 写仓库返回 `403 Resource not accessible by integration`。这是写权限限制，不是 token 过期；旧 PAT 已暴露，不复用。需要该 connector 获得本仓库 contents write 权限后，推本地 `66703a9`（及随后修正提交），页面才会在线更新。
+
 
 ### 本地打开
 

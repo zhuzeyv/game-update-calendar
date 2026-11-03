@@ -2266,7 +2266,11 @@
           const visible = candidates.filter((item) => (
             typeof item.follows === 'number' && item.follows > threshold
           ));
-          const unknownCount = candidates.filter((item) => typeof item.follows !== 'number').length;
+          const rawUnknownCount = candidates.filter((item) => typeof item.follows !== 'number').length;
+          const trackedCount = Number(data.releaseStatus?.tracked ?? candidates.length);
+          const unknownCount = data.releaseStatus?.mode === 'steam'
+            ? Math.max(rawUnknownCount, trackedCount - visible.length)
+            : rawUnknownCount;
           data.releases = visible;
           data.releaseStatus = data.releaseStatus || {};
           data.releaseStatus.count = visible.length;

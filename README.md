@@ -42,7 +42,7 @@
 | 1 | [SteamDB upcoming](https://steamdb.info/upcoming/) | 带真实 `Follows` 数字，按 **follows > 5000** 过滤（5000 本身不显示）。SteamDB 有 Cloudflare 人机验证，普通请求会被挡，所以由本机 Chrome 渲染后读取表格 |
 | 2 | Valve 官方「热门即将推出」 | `store.steampowered.com/search/results/?filter=popularcomingsoon`，只作为标题 / 日期候选。**没有 follows 数字，因此不能证明符合阈值；无真实关注度的条目一律隐藏**，绝不按热度排名代替关注度 |
 
-SteamDB 成功时，只有真实 follows **大于**阈值的游戏才显示；SteamDB 不可用时，Steam 官方榜不会被当作达标证明，关注度未知的候选也隐藏。页面「数据源」会说明隐藏的未知关注度候选数量及 SteamDB 的失败原因。
+SteamDB 成功时，只有真实 follows **大于**阈值的游戏才显示；SteamDB 不可用时，Steam 官方榜不会被当作达标证明，关注度未知的候选也隐藏。静态快照模式也会在浏览器端再次执行相同过滤，即使已发布的 `data.json` 是旧数据，也不会把未知或不足 5000 的游戏显示出来。页面「数据源」会说明隐藏的未知关注度候选数量及 SteamDB 的失败原因。
 - 每天同步时会记录每款游戏**第一次上榜的日期**；当天首次出现的会打 `NEW` 角标（第一次同步只建立基线，不会把所有游戏都标成 NEW）。
 - 阈值和候选抓取数量可以用环境变量改：`RELEASE_FOLLOWS_MIN=5000`（**严格大于** 5000 才显示）、`RELEASE_POPULAR_LIMIT=60`（官方热门榜候选抓取量）、`RELEASE_WINDOW_DAYS=420`；完全关掉 SteamDB 那条路用 `RELEASE_STEAMDB=0`。
 - 只保留有**确切发售日**的游戏；`Q4 2026`、`Coming soon`、`待定` 这类没有具体日期的会被跳过。
