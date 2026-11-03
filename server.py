@@ -1078,8 +1078,12 @@ def periodic_refresh(collector: Collector, interval: int) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="游戏官方更新日历本地服务")
-    parser.add_argument("--host", default="127.0.0.1", help="监听地址")
-    parser.add_argument("--port", type=int, default=8787, help="监听端口")
+    # Cloud hosts inject PORT and expect the process to bind every interface;
+    # running from start.bat keeps the old localhost-only default.
+    default_port = int(os.environ.get("PORT") or 8787)
+    default_host = os.environ.get("HOST") or ("0.0.0.0" if os.environ.get("PORT") else "127.0.0.1")
+    parser.add_argument("--host", default=default_host, help="监听地址")
+    parser.add_argument("--port", type=int, default=default_port, help="监听端口")
     parser.add_argument("--no-refresh", action="store_true", help="只读取缓存，不自动请求官方源")
     parser.add_argument("--open", action="store_true", help="启动后自动打开浏览器")
     parser.add_argument("--interval", type=int, default=1800, help="自动同步间隔（秒）")

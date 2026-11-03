@@ -120,6 +120,24 @@ Steam 官方热门即将推出列表不给 follows 数字。旧逻辑曾把榜�
 - 已推送 `089470f`，Pages 构建 `built`；线上 `data.json` 与 `index.html` 均已是新版（`followsSource` 出现 6 次、含「手工校准」徽章），线上实读 17 款、无 Mycelarium。
 - 全部 36 项回归测试通过。
 
+## 2026-11-03 20:10：只提醒联机游戏（单机不再出现）
+
+- 需求：新游只提醒「能联网一起玩」的，纯单机不显示（例：HEART ABYSS 只有 `Single-player`）。
+- 判定依据是 Steam 商店 `categories`，不是猜测：
+  - `releases.classify_play_mode()` 把分类映射成 `online` / `offline` / `unknown`。
+  - `online` 白名单：`Multi-player`、`PvP`、`Online PvP`、`Co-op`、`Online Co-op`、`MMO`、`Cross-Platform Multiplayer`、`LAN PvP`、`LAN Co-op`、`Remote Play Together`。
+  - **本地分屏（`Shared/Split Screen`、`Shared/Split Screen Co-op`）不算联网**，这是刻意排除的。
+  - 有 `Single-player` 且没有任何联网分类 → `offline`，从日历移除。
+- 缓存文件 `data/steam-app-details.json`（`apps[appid] = {name, playMode, categories, checkedAt, region}`）；
+  `tools/fetch_app_details.py` 负责刷新，`cn` 失败会自动用 `us` 重试（Steam 商店分区限制）。
+- 当前 17 款分类结果：**6 款联机 / 11 款单机**。
+  - 联机：ArcheAge Chronicles、Loftia、Godzilla: Destroy All Monsters Melee Remastered、Airframe Ultra、just volleyball、LYSSA: Goddess of Rage
+  - 单机（已隐藏）：DREADMOOR、Casualties: Unknown、Hull Rupture、County of Fortune、Cozy Game Restoration、Underkeep、Find The Needle、Horses of Hoofprint Bay、HEART ABYSS、Sexpatch: Horny Capes、Slotbound
+- 快照变为 **525 条更新 / 6 款新游**；状态新增 `excludedSinglePlayer`、`unknownPlayMode`、`playModeSource`、`appDetailsAt`。
+- 前端数据源面板改为「6 款联机新游（follows > 5,000）· 11 款单机已隐藏」；静态快照的客户端二次过滤也会丢弃 `playMode === 'offline'` 的旧条目。
+- 新增 11 项测试（分类函数 6 项 + 过滤与状态 5 项），全套通过。
+- 分类未知（`unknown`）的条目**仍然保留**，只在面板计数提示 —— 避免 Steam 接口抽风时日历被清空。
+
 ### 本地打开
 
 双击 `start.bat`，或：

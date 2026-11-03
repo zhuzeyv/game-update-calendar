@@ -2110,7 +2110,9 @@
               ? '手工校准'
               : (release.mode === 'idle' ? '未同步' : '缺关注度')));
         const releaseMeta = [
-          `${release.count || 0} 款符合 follows > ${formatNumber(release.followsMin)}`,
+          `${release.count || 0} 款联机新游（follows > ${formatNumber(release.followsMin)}）`,
+          release.excludedSinglePlayer ? `${formatNumber(release.excludedSinglePlayer)} 款单机已隐藏` : '',
+          release.unknownPlayMode ? `${formatNumber(release.unknownPlayMode)} 款联机状态未知` : '',
           followsSource === 'manual' ? `关注数手工导入于 ${formatSync(release.overlayAt)}` : '',
           followsSource === 'none' ? `${formatNumber(release.excludedUnknownFollows || 0)} 款候选无关注度数据（已隐藏）` : '',
           `最近成功 ${formatSync(release.fetchedAt)}`
@@ -2270,22 +2272,32 @@
           // published data.json cannot re-show unverified or low-follow games.
           const threshold = Number(data.releaseStatus?.followsMin ?? 5000);
           const candidates = Array.isArray(data.releases) ? data.releases : [];
-          const visible = candidates.filter((item) => (
-            typeof item.follows === 'number' && item.follows > threshold
-          ));
-          const rawUnknownCount = candidates.filter((item) => typeof item.follows !== 'number').length;
+          const withFollows = candidates.filter((item) => typeof item.follows === 'number');
+          const followsOk = withFollows.filter((item) => item.follows > threshold);
+          // Only networked titles are announced; a stale snapshot that still
+          // carries single-player games must not slip through.
+          const visible = followsOk.filter((item) => item.playMode !== 'offline');
+          const singlePlayerHidden = followsOk.length - visible.length;
+          const rawUnknownCount = candidates.length - withFollows.length;
           const trackedCount = Number(data.releaseStatus?.tracked ?? candidates.length);
           const unknownCount = data.releaseStatus?.mode === 'steam'
-            ? Math.max(rawUnknownCount, trackedCount - visible.length)
+            ? Math.max(rawUnknownCount, trackedCount - withFollows.length)
             : rawUnknownCount;
           data.releases = visible;
           data.releaseStatus = data.releaseStatus || {};
           data.releaseStatus.count = visible.length;
+          data.releaseStatus.excludedSinglePlayer = Math.max(
+            Number(data.releaseStatus.excludedSinglePlayer || 0),
+            singlePlayerHidden
+          );
           data.releaseStatus.excludedUnknownFollows = Math.max(
             Number(data.releaseStatus.excludedUnknownFollows || 0),
             unknownCount
           );
-          data.releaseStatus.excludedBelowThreshold = candidates.length - visible.length - unknownCount;
+          data.releaseStatus.excludedBelowThreshold = Math.max(
+            0,
+            candidates.length - visible.length - unknownCount - singlePlayerHidden
+          );
           if (data.stats) {
             data.stats.releaseTotal = visible.length;
             data.stats.releaseNew = visible.filter((item) => item.isNew).length;

@@ -62,6 +62,23 @@ DEFAULT_POPULAR_LIMIT = 60
 DEFAULT_WINDOW_DAYS = 420
 DEFAULT_PAST_DAYS = 14
 
+# Steam store categories that actually mean "you can play with other people
+# over the network".  Local-only split screen is deliberately NOT here: those
+# are still single-player purchases for our purposes.
+ONLINE_CATEGORIES = frozenset({
+    "multi-player",
+    "pvp",
+    "online pvp",
+    "co-op",
+    "online co-op",
+    "mmo",
+    "cross-platform multiplayer",
+    "lan pvp",
+    "lan co-op",
+    "remote play together",
+})
+OFFLINE_CATEGORIES = frozenset({"single-player"})
+
 _DIRECT = build_opener(ProxyHandler({}))
 _ENV_PROXY = build_opener()
 _ROUTE: dict[str, str | None] = {"mode": None}
@@ -127,6 +144,27 @@ def _to_int(value: Any) -> int | None:
         return int(text)
     except ValueError:
         return None
+
+
+def classify_play_mode(categories: Any) -> str:
+    """Map Steam store categories to ``online`` / ``offline`` / ``unknown``.
+
+    A title that only advertises ``Single-player`` (plus controller, cloud or
+    family-sharing extras) is a single-player game.  Anything with a networked
+    mode — ``Multi-player``, ``Online Co-op``, ``PvP``, ``MMO`` … — is online.
+    Local split screen alone does not count as online.
+    """
+
+    if isinstance(categories, str):
+        categories = [categories]
+    if not isinstance(categories, (list, tuple, set, frozenset)):
+        return "unknown"
+    names = {str(value).strip().lower() for value in categories if value}
+    if names & ONLINE_CATEGORIES:
+        return "online"
+    if names & OFFLINE_CATEGORIES:
+        return "offline"
+    return "unknown"
 
 
 def parse_release_date(value: str, today: date | None = None) -> date | None:
@@ -665,6 +703,38 @@ class ReleaseStore:
                 target["date"] = row["date"]
         return items
 
+    # -- online / single-player classification ------------------------
+    def _app_details_path(self) -> Path:
+        return self.cache_file.parent / "steam-app-details.json"
+
+    def _load_app_details(self) -> tuple[dict[str, dict[str, Any]], str | None]:
+        """Steam store categories captured per appid.
+
+        ``tools/fetch_app_details.py`` fills this file from
+        ``store.steampowered.com/api/appdetails``; it lives next to the
+        follows overlay so a blocked store API never empties the calendar.
+        """
+
+        path = self._app_details_path()
+        if not path.exists():
+            return {}, None
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8-sig"))
+        except (OSError, ValueError):
+            return {}, None
+        apps = payload.get("apps")
+        if not isinstance(apps, dict):
+            return {}, None
+        return apps, payload.get("capturedAt")
+
+    def _apply_play_mode(self, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        apps, _captured = self._load_app_details()
+        for item in items:
+            row = apps.get(str(item.get("appid")))
+            mode = row.get("playMode") if isinstance(row, dict) else None
+            item["playMode"] = mode if mode in {"online", "offline"} else "unknown"
+        return items
+
     @staticmethod
     def _merge(steamdb_items: list[dict[str, Any]], steam_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """SteamDB rows win; the official list only supplies better dates."""
@@ -690,19 +760,29 @@ class ReleaseStore:
         threshold = follows_min()
         limit = popular_limit()
         rows, overlay_at = self._load_overlay()
-        items = self._apply_overlay([dict(item) for item in self.items])
+        apps, apps_at = self._load_app_details()
+        items = self._apply_play_mode(self._apply_overlay([dict(item) for item in self.items]))
         visible: list[dict[str, Any]] = []
         unknown_follows = 0
         below_threshold = 0
+        single_player = 0
+        unknown_mode = 0
         for item in items:
             follows = item.get("follows")
             if follows is None:
                 unknown_follows += 1
                 continue
-            if follows > threshold:
-                visible.append(item)
-            else:
+            if follows <= threshold:
                 below_threshold += 1
+                continue
+            mode = item.get("playMode")
+            if mode == "offline":
+                # Single-player only: the user only wants online titles.
+                single_player += 1
+                continue
+            if mode != "online":
+                unknown_mode += 1
+            visible.append(item)
 
         if self.mode == "steamdb":
             follows_source = "live"
@@ -721,6 +801,7 @@ class ReleaseStore:
                 "date": item["date"],
                 "follows": item.get("follows"),
                 "gain7d": item.get("gain7d"),
+                "playMode": item.get("playMode") or "unknown",
                 "price": item.get("price") or "",
                 "rank": item.get("rank"),
                 "source": item.get("source") or self.mode,
@@ -749,6 +830,10 @@ class ReleaseStore:
                 "followsSource": follows_source,
                 "overlayAt": overlay_at,
                 "overlayRows": len(rows),
+                "playModeSource": "cache" if apps else "none",
+                "appDetailsAt": apps_at,
+                "excludedSinglePlayer": single_player,
+                "unknownPlayMode": unknown_mode,
                 "excludedUnknownFollows": unknown_follows,
                 "excludedBelowThreshold": below_threshold,
                 "newCount": sum(1 for item in releases if item["isNew"]),

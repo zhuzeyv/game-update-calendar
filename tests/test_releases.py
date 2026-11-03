@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import sys
+import tempfile
 from datetime import date
 from pathlib import Path
 
@@ -178,6 +180,44 @@ def main() -> int:
     snap2 = store2.snapshot()
     ok &= check("官方热门榜无 follows 时不显示未核实条目", len(snap2["releases"]) == 0, str(len(snap2["releases"])))
     ok &= check("无 follows 候选计入隐藏数", snap2["status"]["excludedUnknownFollows"] == 2, str(snap2["status"]))
+
+    # -- online vs single-player --------------------------------------
+    ok &= check(
+        "只有 Single-player 判为单机",
+        releases.classify_play_mode(["Single-player", "Steam Cloud", "Family Sharing"]) == "offline",
+    )
+    ok &= check(
+        "单机 + 联机 判为联机",
+        releases.classify_play_mode(["Single-player", "Multi-player", "Online Co-op"]) == "online",
+    )
+    ok &= check(
+        "Online PvP 判为联机",
+        releases.classify_play_mode(["PvP", "Online PvP"]) == "online",
+    )
+    ok &= check(
+        "本地分屏不算联网",
+        releases.classify_play_mode(["Shared/Split Screen Co-op", "Shared/Split Screen"]) == "unknown",
+    )
+    ok &= check("空分类判为未知", releases.classify_play_mode([]) == "unknown")
+    ok &= check("字符串分类也能判", releases.classify_play_mode("Multi-player") == "online")
+
+    # 缓存里有单机记录时，该游戏应从日历里消失
+    with tempfile.TemporaryDirectory() as tmp:
+        tmpdir = Path(tmp)
+        (tmpdir / "steam-app-details.json").write_text(
+            json.dumps({"apps": {str(rows[0]["appid"]): {"name": "x", "playMode": "offline", "categories": ["Single-player"]}}}),
+            encoding="utf-8",
+        )
+        store3 = releases.ReleaseStore(tmpdir / "releases.json", Path("nonexistent-profile"))
+        store3.items = releases._within_window(rows, TODAY)
+        store3.mode = "steamdb"
+        snap3 = store3.snapshot()
+        names3 = [item["name"] for item in snap3["releases"]]
+        ok &= check("单机游戏不显示", rows[0]["name"] not in names3, str(names3))
+        ok &= check("单机隐藏数写入状态", snap3["status"]["excludedSinglePlayer"] == 1, str(snap3["status"]))
+        ok &= check("其余条目保留", len(snap3["releases"]) == 5, str(len(snap3["releases"])))
+        ok &= check("条目带 playMode 字段", all("playMode" in item for item in snap3["releases"]))
+        ok &= check("未分类条目计入未知", snap3["status"]["unknownPlayMode"] == 5, str(snap3["status"]))
 
     print("\n全部通过" if ok else "\n有失败项")
     return 0 if ok else 1

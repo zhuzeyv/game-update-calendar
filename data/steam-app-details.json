@@ -1,0 +1,224 @@
+{
+  "version": 1,
+  "capturedAt": "2026-11-03T20:05:36+08:00",
+  "note": "Steam 商店 categories 分类：online=可联网，offline=纯单机，unknown=未取到",
+  "apps": {
+    "3218230": {
+      "name": "ArcheAge Chronicles",
+      "playMode": "online",
+      "categories": [
+        "Multi-player",
+        "MMO",
+        "PvP",
+        "Online PvP",
+        "Co-op",
+        "Online Co-op",
+        "Full controller support"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "3629430": {
+      "name": "DREADMOOR",
+      "playMode": "offline",
+      "categories": [
+        "Single-player",
+        "Custom Volume Controls",
+        "Save Anytime",
+        "Stereo Sound",
+        "Steam Cloud",
+        "Family Sharing"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "2320980": {
+      "name": "Loftia",
+      "playMode": "online",
+      "categories": [
+        "Multi-player",
+        "MMO",
+        "Co-op",
+        "Online Co-op",
+        "Full controller support",
+        "In-App Purchases",
+        "Family Sharing"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "4576490": {
+      "name": "Casualties: Unknown",
+      "playMode": "offline",
+      "categories": [
+        "Single-player",
+        "Family Sharing"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "4358660": {
+      "name": "Hull Rupture",
+      "playMode": "offline",
+      "categories": [
+        "Single-player",
+        "Steam Cloud",
+        "Family Sharing"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "3204330": {
+      "name": "County of Fortune",
+      "playMode": "offline",
+      "categories": [
+        "Single-player",
+        "Steam Achievements",
+        "Steam Cloud",
+        "Family Sharing"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "3581230": {
+      "name": "Cozy Game Restoration",
+      "playMode": "offline",
+      "categories": [
+        "Single-player",
+        "Full controller support",
+        "Custom Volume Controls",
+        "Family Sharing"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "4251460": {
+      "name": "Godzilla: Destroy All Monsters Melee Remastered",
+      "playMode": "online",
+      "categories": [
+        "Single-player",
+        "Multi-player",
+        "PvP",
+        "Online PvP",
+        "Shared/Split Screen PvP",
+        "Shared/Split Screen",
+        "Remote Play Together",
+        "Steam Achievements",
+        "Family Sharing"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "2411200": {
+      "name": "Underkeep",
+      "playMode": "offline",
+      "categories": [
+        "Single-player",
+        "Steam Achievements",
+        "Full controller support",
+        "Steam Cloud",
+        "Family Sharing"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "5160800": {
+      "name": "Find The Needle",
+      "playMode": "offline",
+      "categories": [
+        "Single-player",
+        "Steam Achievements",
+        "Family Sharing"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "2522120": {
+      "name": "Airframe Ultra",
+      "playMode": "online",
+      "categories": [
+        "Single-player",
+        "Multi-player",
+        "PvP",
+        "Online PvP",
+        "Shared/Split Screen PvP",
+        "Co-op",
+        "Online Co-op",
+        "Shared/Split Screen Co-op",
+        "Shared/Split Screen",
+        "Full controller support"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "5037200": {
+      "name": "just volleyball",
+      "playMode": "online",
+      "categories": [
+        "Single-player",
+        "Multi-player",
+        "PvP",
+        "Online PvP",
+        "LAN PvP",
+        "Shared/Split Screen PvP",
+        "Co-op",
+        "Online Co-op",
+        "LAN Co-op",
+        "Shared/Split Screen Co-op",
+        "Shared/Split Screen",
+        "Steam Achievements",
+        "Remote Play Together",
+        "Steam Cloud"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "3727090": {
+      "name": "Horses of Hoofprint Bay",
+      "playMode": "offline",
+      "categories": [
+        "Single-player",
+        "Steam Achievements",
+        "Steam Cloud",
+        "Family Sharing"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "1892100": {
+      "name": "HEART ABYSS",
+      "playMode": "offline",
+      "categories": [
+        "Single-player",
+        "Full controller support",
+        "Gamepad Recommended",
+        "Family Sharing"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "4463730": {
+      "name": "Sexpatch: Horny Capes",
+      "playMode": "offline",
+      "categories": [
+        "Single-player",
+        "Steam Achievements",
+        "Save Anytime",
+        "Family Sharing"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "5096020": {
+      "name": "LYSSA: Goddess of Rage",
+      "playMode": "online",
+      "categories": [
+        "Single-player",
+        "Multi-player",
+        "PvP",
+        "Online PvP",
+        "Steam Achievements",
+        "In-App Purchases",
+        "Family Sharing"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    },
+    "4459590": {
+      "name": "Slotbound",
+      "playMode": "offline",
+      "categories": [
+        "Single-player",
+        "Full controller support",
+        "Custom Volume Controls",
+        "Save Anytime",
+        "Family Sharing"
+      ],
+      "checkedAt": "2026-11-03T20:05:36+08:00"
+    }
+  }
+}
