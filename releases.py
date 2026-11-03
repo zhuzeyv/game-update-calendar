@@ -15,8 +15,8 @@ Two data paths feed the same list:
     popularity.  It has no follower number, so these rows are candidates
     only; they remain hidden until a real SteamDB follows count is known.
 
-Nothing here fabricates numbers: when the follower count is unknown the
-item carries ``follows: null`` and the page shows the popularity rank.
+Nothing here fabricates numbers: candidates without a real follows count stay
+hidden until SteamDB provides one.
 """
 
 from __future__ import annotations

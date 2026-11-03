@@ -120,6 +120,7 @@ def main() -> int:
     ok &= check("第一行 follows", first.get("follows") == 68293, str(first.get("follows")))
     ok &= check("第一行 7d 涨幅", first.get("gain7d") == 7598, str(first.get("gain7d")))
     ok &= check("第一行日期", first.get("date") == "2026-11-03", str(first.get("date")))
+    ok &= check("第一行价格", "128" in (first.get("price") or ""), str(first.get("price")))
     ok &= check("Mycelarium 的实际 follows 是 488", next((r["follows"] for r in rows if r["name"] == "Mycelarium"), None) == 488)
 
     # -- Steam popular list -------------------------------------------
