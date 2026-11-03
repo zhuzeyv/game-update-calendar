@@ -7,13 +7,13 @@ Two data paths feed the same list:
     The table on https://steamdb.info/upcoming/, rendered with the local
     Chrome (``browser.py``) because the site sits behind a Cloudflare
     challenge.  This path carries the real follower counts, so the
-    ``follows >= 5000`` rule can be applied literally.
+    strict ``follows > 5000`` rule can be applied literally.
 
 ``steam``
     Valve's own "Popular Upcoming" search bucket
     (``filter=popularcomingsoon``), which is ordered by wishlist
-    popularity.  It has no follower number, so the fallback keeps the top
-    ``RELEASE_POPULAR_LIMIT`` entries and marks them as ranked instead.
+    popularity.  It has no follower number, so these rows are candidates
+    only; they remain hidden until a real SteamDB follows count is known.
 
 Nothing here fabricates numbers: when the follower count is unknown the
 item carries ``follows: null`` and the page shows the popularity rank.
@@ -631,14 +631,17 @@ class ReleaseStore:
         threshold = follows_min()
         limit = popular_limit()
         visible: list[dict[str, Any]] = []
+        unknown_follows = 0
+        below_threshold = 0
         for item in self.items:
             follows = item.get("follows")
-            rank = item.get("rank")
             if follows is None:
-                if rank and rank <= limit:
-                    visible.append(item)
-            elif follows >= threshold:
+                unknown_follows += 1
+                continue
+            if follows > threshold:
                 visible.append(item)
+            else:
+                below_threshold += 1
 
         releases = []
         for item in sorted(visible, key=lambda row: (row["date"], -(row.get("follows") or 0))):
@@ -675,6 +678,8 @@ class ReleaseStore:
                 "popularLimit": limit,
                 "count": len(releases),
                 "tracked": len(self.items),
+                "excludedUnknownFollows": unknown_follows,
+                "excludedBelowThreshold": below_threshold,
                 "newCount": sum(1 for item in releases if item["isNew"]),
             },
         }

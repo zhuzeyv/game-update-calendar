@@ -11,7 +11,8 @@
 - 数据缓存：`data/cache.json`，本次最后一次成功同步约 **525 条事件**。
 - 数据源状态：**22/22 个已配置数据源正常**。
 - 游戏覆盖：**21/22**。
-- **新游发售（本次新增）**：`releases.py` + `browser.py`，按发售日落到日期格上，带 follows 过滤与 NEW 角标。
+- follows 阈值现严格按 **`follows > 5000`** 执行，5000 本身不显示；真实关注度未知的官方热门榜候选也隐藏，不再用榜单排名代替关注度。
+- 2026-11-03 修复 Mycelarium 误显示：Steam 官方候选数据里 `follows` 是 `null`，SteamDB 截图实际为 488。真实关注度未达标（或未知）都不展示。
 
 ## 本次新增：新游发售
 
@@ -27,11 +28,9 @@ follows > 5000 才显示，按北京时间归档。
    用户家里的 IP 通常能过；过不了就降级。
 2. **降级来源找到了官方入口**：
    `store.steampowered.com/search/results/?filter=popularcomingsoon`
-   就是 Steam 自己的「热门即将推出」，按愿望单排序，和 SteamDB 榜单人群高度重合
-   （ArcheAge Chronicles / Loftia / DREADMOOR / Cozy Game Restoration 都在）。
-   **它没有 follows 数字**，所以降级时用「取热度榜前 60 名」，卡片显示「热门榜 #N」，
-   绝不编造数字。
-3. **两种口径都做**：
+   是 Steam 自己的「热门即将推出」，按愿望单排序。它**不提供 follows 数字**，
+   只能当作标题 / 日期候选，**不能用排名代替 follows 阈值，也不能显示没有真实关注数的游戏**。
+3. **两种口径**：
    - 发售日 = 当天 → 落到那一格（主口径）；
    - 当天首次出现在榜单里的 → 打 `NEW` 角标（记录 `firstSeen`）。
    首次同步只建基线（`baselineDate`），不会把整张榜都标成 NEW。
@@ -54,8 +53,8 @@ follows > 5000 才显示，按北京时间归档。
 
 | 环境变量 | 默认 | 作用 |
 |---|---|---|
-| `RELEASE_FOLLOWS_MIN` | 5000 | SteamDB 模式下的 follows 阈值 |
-| `RELEASE_POPULAR_LIMIT` | 60 | 兜底模式取热度榜前几名 |
+| `RELEASE_FOLLOWS_MIN` | 5000 | SteamDB 模式阈值，必须严格大于才展示 |
+| `RELEASE_POPULAR_LIMIT` | 60 | Steam 官方热门候选的抓取量；没有 follows 的仍然隐藏 |
 | `RELEASE_WINDOW_DAYS` | 420 | 向后保留多少天的发售日 |
 | `RELEASE_STEAMDB` | 1 | 设 0 完全跳过 SteamDB 那条路 |
 | `CHROME_PATH` | 自动查找 | 指定浏览器可执行文件 |
@@ -74,6 +73,18 @@ follows > 5000 才显示，按北京时间归档。
   并把同步状态标成「静态快照」，同时禁用刷新按钮。
 - **刷新快照**：`python tools/build_static.py` → 提交 `docs/` 并 push。
   没有配 CI，快照不会自己更新。
+
+## 最近修正：关注度门槛（2026-11-03）
+
+Steam 官方热门即将推出列表不给 follows 数字。旧逻辑曾把榜单前 60 当作替代条件，因此 `Mycelarium`（用户截图显示 488 follows）也可能被放进日历。
+
+现在筛选是硬条件：
+
+- 只有真实 follows **严格大于 5000** 才显示；恰好 5000 也隐藏。
+- Steam 官方列表里 follows 缺失（`null`）的游戏全部隐藏，榜单排名不再替代关注度。
+- 数据源面板会列出因关注度未知而隐藏的候选数量。
+- 当前缓存来自 Steam 官方候选列表，120 款都没有 follows；所以静态页面本次新游显示为 0 款是预期行为。SteamDB 抓取恢复、拿到真实 follows 后，达标游戏会显示。
+- 回归测试包含 `Mycelarium = 488`、5000 边界、5001 达标，以及官方列表未知 follows 的隐藏断言。
 
 ## 如何继续
 

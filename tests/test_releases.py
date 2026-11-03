@@ -50,6 +50,18 @@ STEAMDB_FIXTURE = """
       <td><a href="/app/3200000/">Far Future Game</a></td>
       <td></td><td>&mdash;</td><td>&mdash;</td><td>Q4 2027</td><td>9,000</td><td>+3</td>
     </tr>
+    <tr>
+      <td><a href="/app/3300000/">Exactly 5000 Follows</a></td>
+      <td></td><td>&mdash;</td><td>&mdash;</td><td>04 Nov</td><td>5,000</td><td>+10</td>
+    </tr>
+    <tr>
+      <td><a href="/app/3300001/">Just Over 5000</a></td>
+      <td></td><td>&mdash;</td><td>&mdash;</td><td>04 Nov</td><td>5,001</td><td>+10</td>
+    </tr>
+    <tr>
+      <td><a href="/app/5181520/">Mycelarium</a></td>
+      <td></td><td>&mdash;</td><td>&mdash;</td><td>03 Nov</td><td>488</td><td>+461</td>
+    </tr>
   </tbody>
 </table>
 </body></html>
@@ -101,14 +113,14 @@ def main() -> int:
 
     # -- SteamDB table ------------------------------------------------
     rows = releases.parse_steamdb(STEAMDB_FIXTURE, TODAY)
-    ok &= check("SteamDB 解析出 6 行（Q4 2027 无具体日被跳过）", len(rows) == 6, str(len(rows)))
+    ok &= check("SteamDB 解析出 9 行（无具体日被跳过）", len(rows) == 9, str(len(rows)))
     first = rows[0] if rows else {}
     ok &= check("第一行 appid", first.get("appid") == 2811040, str(first.get("appid")))
     ok &= check("第一行名称", first.get("name") == "ArcheAge Chronicles", str(first.get("name")))
     ok &= check("第一行 follows", first.get("follows") == 68293, str(first.get("follows")))
     ok &= check("第一行 7d 涨幅", first.get("gain7d") == 7598, str(first.get("gain7d")))
     ok &= check("第一行日期", first.get("date") == "2026-11-03", str(first.get("date")))
-    ok &= check("第一行价格", "128" in (first.get("price") or ""), str(first.get("price")))
+    ok &= check("Mycelarium 的实际 follows 是 488", next((r["follows"] for r in rows if r["name"] == "Mycelarium"), None) == 488)
 
     # -- Steam popular list -------------------------------------------
     steam_rows = releases.parse_steam_popular(STEAM_FIXTURE, TODAY)
@@ -135,8 +147,11 @@ def main() -> int:
     store.seen = {str(rows[0]["appid"]): TODAY.isoformat()}
     snapshot = store.snapshot()
     names = [item["name"] for item in snapshot["releases"]]
-    ok &= check("follows>=5000 过滤掉小体量游戏", "Tiny Indie Thing" not in names, str(names))
-    ok &= check("保留 5 款热门", len(snapshot["releases"]) == 5, str(len(snapshot["releases"])))
+    ok &= check("只显示 follows >5000", len(snapshot["releases"]) == 6, str(names))
+    ok &= check("follows=5000 不显示", "Exactly 5000 Follows" not in names, str(names))
+    ok &= check("follows=5001 显示", "Just Over 5000" in names, str(names))
+    ok &= check("Mycelarium follows=488 不显示", "Mycelarium" not in names, str(names))
+    ok &= check("小于阈值的游戏不显示", "Tiny Indie Thing" not in names, str(names))
     ok &= check(
         "今天首次出现的标为 NEW",
         [item["isNew"] for item in snapshot["releases"] if item["appid"] == rows[0]["appid"]] == [True],
@@ -153,15 +168,15 @@ def main() -> int:
     store.stale = True
     stale_status = store.snapshot()["status"]
     ok &= check("失败但有缓存 -> stale", stale_status["stale"] is True, str(stale_status))
-    ok &= check("stale 时仍保留条目", len(store.snapshot()["releases"]) == 5)
+    ok &= check("stale 时仍保留合格条目", len(store.snapshot()["releases"]) == 6)
 
-    # -- fallback mode ------------------------------------------------
+    # -- fallback mode: Steam gives no follows, so these are all hidden ---
     store2 = releases.ReleaseStore(Path("nonexistent2.json"), Path("nonexistent-profile"))
     store2.items = releases._within_window(steam_rows, TODAY)
     store2.mode = "steam"
     snap2 = store2.snapshot()
-    ok &= check("兜底模式使用排名阈值", len(snap2["releases"]) == 2, str(len(snap2["releases"])))
-    ok &= check("兜底模式 follows 为 None", snap2["releases"][0]["follows"] is None)
+    ok &= check("官方热门榜无 follows 时不显示未核实条目", len(snap2["releases"]) == 0, str(len(snap2["releases"])))
+    ok &= check("无 follows 候选计入隐藏数", snap2["status"]["excludedUnknownFollows"] == 2, str(snap2["status"]))
 
     print("\n全部通过" if ok else "\n有失败项")
     return 0 if ok else 1

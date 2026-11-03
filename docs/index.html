@@ -2104,10 +2104,10 @@
         const releaseStatusClass = releaseOk ? 'ok' : (releaseFallback || releaseStale ? 'warn' : 'off');
         const releaseStatusText = releaseStale
           ? '缓存'
-          : (releaseOk ? '正常' : (releaseFallback ? '兜底' : (release.mode === 'idle' ? '未同步' : '失败')));
+          : (releaseOk ? '正常' : (releaseFallback ? '缺关注度' : (release.mode === 'idle' ? '未同步' : '失败')));
         const releaseMeta = releaseOk
-          ? `${release.count || 0} 款 · follows ≥ ${formatNumber(release.followsMin)} · 最近成功 ${formatSync(release.fetchedAt)}`
-          : `${release.count || 0} 款 · 热门榜前 ${release.popularLimit} · 最近成功 ${formatSync(release.fetchedAt)}`;
+          ? `${release.count || 0} 款符合 follows > ${formatNumber(release.followsMin)} · 最近成功 ${formatSync(release.fetchedAt)}`
+          : `${release.count || 0} 款符合 follows > ${formatNumber(release.followsMin)} · ${formatNumber(release.excludedUnknownFollows || 0)} 款候选无关注度数据（已隐藏） · 最近成功 ${formatSync(release.fetchedAt)}`;
         let rows = `
           <div class="source-row">
             <span class="source-row-dot" style="--c:var(--release)" aria-hidden="true"></span>
@@ -2157,7 +2157,7 @@
           </div>
           <p class="source-note">
             <strong>数据源说明：</strong>Steam 游戏使用 Valve 官方 Web API；暴雪使用官方新闻 API；Valorant 使用 Riot 官方新闻页；英雄联盟使用腾讯官方公告；Warframe 使用官方新闻页；永恒之塔 2 使用 NCSoft 官方公告 API；NIKKE 使用 GameKee 社区公告（非官方 API，按需求接入）；炉石传说数据源已按需求停用。
-            <strong>新游发售</strong>优先读取 SteamDB 的 upcoming 表（带 follows 数字，按 ${formatNumber(release.followsMin)} 过滤）；SteamDB 被 Cloudflare 拦截或封禁时，自动改用 Valve 官方的「热门即将推出」榜单，按排名取前 ${release.popularLimit} 款。
+            <strong>新游发售</strong>优先读取 SteamDB upcoming 表，只有真实 follows 数字严格大于 ${formatNumber(release.followsMin)} 才显示（等于 5,000 也隐藏）；SteamDB 被 Cloudflare 拦截或封禁时，Steam 官方「热门即将推出」只提供标题 / 日期候选，没有真实关注度的候选一律隐藏，不再按榜单排名冒充达标。
             ${staleCount ? `当前有 ${staleCount} 个源请求失败，但保留了上次成功缓存。` : ''}
           </p>
           ${rows || '<div class="filter-empty">暂无数据源</div>'}
